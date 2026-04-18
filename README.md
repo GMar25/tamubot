@@ -678,6 +678,7 @@ Every user query is traced end-to-end in **Langfuse** and asynchronously evaluat
 - **Langfuse SDK** is **not used** — all telemetry posts directly to the Langfuse REST API via `httpx` (`rag/observability.py`). Required because the official SDK depends on `pydantic.v1` which breaks on Python 3.14+.
 - **RAGAS** runs in a background daemon thread after each response — it does not block the UI.
 - **RAGAS embeddings** use Voyage AI (`voyage-3`) to avoid Google Embedding API compatibility issues.
+- **Metadata Caching**: `get_meeting_times` and `get_syllabus_urls` use an LRU cache (sorted tuples) to eliminate redundant MongoDB lookups.
 
 ---
 
