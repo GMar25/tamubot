@@ -101,6 +101,15 @@ def test_out_of_scope_node_answer_stream_is_list():
     assert result["answer"]  # non-empty
 
 
+def test_out_of_scope_node_falls_back_on_llm_error():
+    """When stream_llm raises, node should return _OOS_FALLBACK without crashing."""
+    from rag.nodes.out_of_scope_node import _OOS_FALLBACK, out_of_scope_node
+    with patch("rag.nodes.out_of_scope_node.stream_llm", side_effect=RuntimeError("API down")):
+        state = {"query": "tell me a joke", "node_trace": [], "timing_ms": {}}
+        result = out_of_scope_node(state)
+    assert result["answer"] == _OOS_FALLBACK
+    assert result["answer_stream"] == [_OOS_FALLBACK]
+    assert "out_of_scope" in result["node_trace"]
 
 def test_pipeline_with_memory_returns_six_tuple():
     import rag.graph.pipeline as pipeline_mod
