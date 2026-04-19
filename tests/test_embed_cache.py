@@ -4,17 +4,17 @@ import threading
 from unittest.mock import MagicMock, patch
 
 
-def _clear_lru_cache():
-    """Clear lru_cache between tests that need a cold start."""
-    from rag.tools.voyage import _embed_query_cached
-    _embed_query_cached.cache_clear()
+def _clear_cache():
+    """Clear the module-level embed cache between tests to ensure isolation."""
+    import rag.tools.voyage as voyage_mod
+    voyage_mod._embed_cache.clear()
 
 
 def test_embed_query_single_thread_calls_api_once():
     """Sequential repeated calls for the same text hit the cache after the first call."""
     from rag.tools.voyage import embed_query
 
-    _clear_lru_cache()
+    _clear_cache()
     fake_embedding = [0.1, 0.2, 0.3]
 
     with patch("rag.tools.voyage._get_client") as mock_get_client:
@@ -32,16 +32,12 @@ def test_embed_query_single_thread_calls_api_once():
     )
 
 
-def test_embed_query_parallel_threads_bounded_api_calls():
-    """When N threads simultaneously call embed_query with the same text on a cold cache,
-    lru_cache may allow up to N racing API calls (known thundering-herd trade-off),
-    but all threads receive the same correct embedding and results are consistent.
-
-    NOTE: We do not assert call_count == 1 here because lru_cache does not
-    prevent thundering herd. See README § Known Issues for context."""
+def test_embed_query_parallel_threads_call_api_exactly_once():
+    """When N threads simultaneously call embed_query with the same text,
+    only ONE Voyage API call should be made (double-checked lock prevents thundering herd)."""
     from rag.tools.voyage import embed_query
 
-    _clear_lru_cache()
+    _clear_cache()
     fake_embedding = [0.4, 0.5, 0.6]
     results: list = []
     errors: list = []
@@ -65,11 +61,12 @@ def test_embed_query_parallel_threads_bounded_api_calls():
 
     assert not errors, f"Threads raised exceptions: {errors}"
     assert len(results) == 5
-    # All threads must return the correct embedding — correctness is guaranteed
+    # All threads must return the correct embedding
     assert all(r == fake_embedding for r in results), f"Results differed: {results}"
-    # API calls bounded to 1..N (lru_cache, no lock, thundering herd possible)
-    assert 1 <= mock_client.embed.call_count <= 5, (
-        f"Expected 1–5 API calls, got {mock_client.embed.call_count}"
+    # Crucially: only one API call despite 5 concurrent threads
+    assert mock_client.embed.call_count == 1, (
+        f"Expected exactly 1 API call (lock prevented thundering herd), "
+        f"got {mock_client.embed.call_count}"
     )
 
 
@@ -77,7 +74,7 @@ def test_embed_query_different_texts_each_call_api_once():
     """Different query texts each get their own cache entry and API call."""
     from rag.tools.voyage import embed_query
 
-    _clear_lru_cache()
+    _clear_cache()
 
     with patch("rag.tools.voyage._get_client") as mock_get_client:
         mock_client = MagicMock()

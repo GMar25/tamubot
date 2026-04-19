@@ -57,6 +57,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+*.bak
 
 # Claude Code internal (keep skills — they're project-specific)
 .claude/*
