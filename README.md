@@ -795,6 +795,7 @@ config.py  (shared root)
 - **Recall@k benchmark metrics**: Restored `eval_chunking.py` logic for precision, hit_rate, and F1 calculations.
 - **Golden set adjudication**: All 45 test cases verified; legacy `recurrent` labels updated to `recursive`.
 - **`SAFETY` / `COURSE_SUMMARY` not query-routable**: not in `rag.models.VALID_CATEGORIES`; stored in MongoDB but router never targets them directly.
+- **Embedding cache (lru_cache) thundering herd**: `embed_query` caches results via `functools.lru_cache(maxsize=512)` in `rag/tools/voyage.py`. Under parallel multi-course retrieval, N worker threads can simultaneously see a cache miss for the same new query string and each make a Voyage API call before any returns. Worst case: N identical calls, each returning the same embedding — no correctness impact, minor cost. Accepted trade-off for chatbot concurrency levels. Upgrade path if needed: replace `lru_cache` with an `OrderedDict`-based LRU behind a `threading.Lock`.
 
 ### Next Steps
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
+from functools import lru_cache
 from typing import Optional
 
 import voyageai
@@ -31,12 +32,35 @@ def _get_client() -> voyageai.Client:
     return _voyage
 
 
-@observe(name="pipeline.retrieval.embed")
-def embed_query(text: str) -> list[float]:
-    """Embed a query string using Voyage AI voyage-3."""
+# ---------------------------------------------------------------------------
+# Embedding cache — lru_cache bounds memory to 512 unique query strings.
+# Thread-safety note: lru_cache does not prevent a thundering herd on the
+# very first call for a new key when multiple threads race simultaneously.
+# For this workload (chatbot, small concurrency) the risk is accepted:
+# worst case is N identical Voyage API calls returning the same embedding.
+# See README § Known Issues if stricter guarantees are needed.
+# ---------------------------------------------------------------------------
+
+@lru_cache(maxsize=512)
+def _embed_query_cached(text: str) -> tuple[float, ...]:
+    """Cache up to 512 query embeddings in-process.
+
+    Returns a tuple (hashable, required by lru_cache).
+    Called by embed_query, which converts back to list[float].
+    """
     client = _get_client()
     result = client.embed([text], model=EMBEDDING_MODEL, input_type="query")
-    return result.embeddings[0]
+    return tuple(result.embeddings[0])
+
+
+@observe(name="pipeline.retrieval.embed")
+def embed_query(text: str) -> list[float]:
+    """Embed a query string using Voyage AI voyage-3.
+
+    Results are cached in-process (up to 512 strings) so that parallel
+    retrieval threads share the embedding for repeated or identical queries.
+    """
+    return list(_embed_query_cached(text))
 
 
 def knee_filter(
