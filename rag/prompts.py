@@ -25,8 +25,10 @@ Examples:
 COURSE IDs
 Identify all course IDs mentioned. Normalize: uppercase department + space + number
 ("csce638" → "CSCE 638", "CSCE-670" → "CSCE 670").
-Extract ONLY courses the student is directly asking about — not prereq background.
+Extract ONLY courses the student is directly asking about, OR anchor courses used for discovery.
+Do NOT extract courses mentioned merely as student background.
 Example: "I got a B in MATH 151, can I take this course?" → course_ids=[]
+Example: "What courses are similar to CSCE 608?" → course_ids=["CSCE 608"]
 If the question uses "this course"/"this class" with no named course ID, set course_ids=[].
 
 INTENT TYPE
