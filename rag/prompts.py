@@ -28,6 +28,7 @@ Identify all course IDs mentioned. Normalize: uppercase department + space + num
 Extract ONLY courses the student is directly asking about, OR anchor courses used for discovery.
 Do NOT extract courses mentioned merely as student background.
 Example: "I got a B in MATH 151, can I take this course?" → course_ids=[]
+Example: "Since I can't use AI in CSCE 629, what other courses focus on it?" → course_ids=["CSCE 629"]
 Example: "What courses are similar to CSCE 608?" → course_ids=["CSCE 608"]
 If the question uses "this course"/"this class" with no named course ID, set course_ids=[].
 
@@ -45,18 +46,22 @@ Examples:
 - "If I don't access Perusall through Canvas, will my grades show up?" → "ADMINISTRATIVE"
 
 RECURSIVE SEARCH
-Set recursive_search = true ONLY when the user wants to discover unknown courses using
-a named course as an anchor ("What should I take with CS 638?", "What follows CS 638?",
-"What courses are similar to CS 638?", "Who else teaches courses like CS 638?").
-False when the question is about named courses only, or no course ID is mentioned.
+Set recursive_search = true ONLY when the user wants to discover UNKNOWN courses using
+a named course as an anchor for sequencing, pairing, similarity, or alternatives.
+Signals: "What should I take with X?", "What follows X?", "What should I take after X?",
+"What pairs well with X?", "Instead of X", "Other than X", "Courses similar to X".
+Rule: If a specific course ID is mentioned as a point of comparison, sequence anchor, 
+or a contrast for finding others, recursive_search must be true.
+False when the question is about a named course only, or no course ID is mentioned.
 
 QUERY REWRITING
 For recursive queries, rewritten_query is an anchor course lookup ONLY.
 Strip ALL discovery intent — the discovery goal is handled in a later step.
 The query must name the course, not what the student wants to do with it:
 - "What should I take with CSCE 605?" → "retrieve course CSCE 605"
-- "What courses follow CSCE 632?" → "retrieve course CSCE 632"
-- "Compare CSCE 638 with something similar" → "retrieve course CSCE 638"
+- "What follows CSCE 632?" → "retrieve course CSCE 632"
+- "What should I take after completing CSCE 638?" → "retrieve course CSCE 638"
+- "What pairs well with CSCE 676?" → "retrieve course CSCE 676"
 - "Who teaches courses like CSCE 605?" → "retrieve course CSCE 605"
 For all other queries, expand with synonyms as usual.
 
