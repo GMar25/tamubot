@@ -33,20 +33,18 @@ class CourseMetadata(BaseModel):
 # ---------------------------------------------------------------------------
 
 VALID_CATEGORIES = [
-    "AI_POLICY",
-    "ATTENDANCE_AND_MAKEUP",
     "COURSE_OVERVIEW",
-    "COURSE_SUMMARY",
-    "GRADING",
     "INSTRUCTOR",
+    "PREREQUISITES",
     "LEARNING_OUTCOMES",
     "MATERIALS",
-    "PREREQUISITES",
-    "SAFETY",
+    "GRADING",
     "SCHEDULE",
+    "ATTENDANCE_AND_MAKEUP",
+    "AI_POLICY",
+    "UNIVERSITY_POLICIES",
     "SUPPORT_SERVICES",
     "SYLLABUS_V3",
-    "UNIVERSITY_POLICIES",
 ]
 
 
