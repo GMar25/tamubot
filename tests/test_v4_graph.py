@@ -35,8 +35,9 @@ def _invoke_graph(function="hybrid_course", query="what are office hours?"):
          patch("rag.tools.mongo.semantic_search", return_value=[
              {"course_id": "202611_CSCE_314_500", "chunk_index": 0, "text": "sem result"}
          ]), \
-         patch("rag.tools.voyage.rerank", side_effect=lambda q, c, top_k: c[:top_k] if c else []), \
+         patch("rag.tools.voyage.rerank", side_effect=lambda q, c, top_k, **kwargs: c[:top_k] if c else []), \
          patch("rag.generator.generate_stream", return_value=iter(["Hello ", "world"])), \
+         patch("rag.tools.llm.stream_llm", return_value=iter(["That's out of scope."])), \
          patch("rag.tools.llm.call_llm") as mock_llm:
         mock_llm.return_value.text = (
             '{"function": "semantic_general", "course_ids": [], "rewritten_query": "related courses"}'
@@ -91,12 +92,24 @@ def test_generator_node_answer_stream_is_list():
 
 def test_out_of_scope_node_answer_stream_is_list():
     from rag.nodes.out_of_scope_node import out_of_scope_node
-    state = {"query": "test", "node_trace": [], "timing_ms": {}}
-    result = out_of_scope_node(state)
+    with patch("rag.nodes.out_of_scope_node.stream_llm", return_value=iter(["That's out of scope. ", "Please ask about TAMU courses."])):
+        state = {"query": "tell me a joke", "node_trace": [], "timing_ms": {}}
+        result = out_of_scope_node(state)
     assert isinstance(result["answer_stream"], list)
-    assert len(result["answer_stream"]) == 1
-    assert "TamuBot" in result["answer_stream"][0]
+    assert len(result["answer_stream"]) >= 1
+    assert isinstance(result["answer"], str)
+    assert result["answer"]  # non-empty
 
+
+def test_out_of_scope_node_falls_back_on_llm_error():
+    """When stream_llm raises, node should return _OOS_FALLBACK without crashing."""
+    from rag.nodes.out_of_scope_node import _OOS_FALLBACK, out_of_scope_node
+    with patch("rag.nodes.out_of_scope_node.stream_llm", side_effect=RuntimeError("API down")):
+        state = {"query": "tell me a joke", "node_trace": [], "timing_ms": {}}
+        result = out_of_scope_node(state)
+    assert result["answer"] == _OOS_FALLBACK
+    assert result["answer_stream"] == [_OOS_FALLBACK]
+    assert "out_of_scope" in result["node_trace"]
 
 def test_pipeline_with_memory_returns_six_tuple():
     import rag.graph.pipeline as pipeline_mod

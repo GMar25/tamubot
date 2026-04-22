@@ -235,8 +235,8 @@ def test_run_eval_logs_trace_and_scores_to_langfuse():
     mock_upsert.assert_called_once()
     # one trace created per query
     mock_ct.assert_called_once()
-    # trace updated with output
-    mock_trace.update.assert_called_once()
+    # trace updated with output (once for metadata, once via finalize_trace)
+    assert mock_trace.update.call_count == 2
     # scores posted via create_score (retrieved_tokens from _score_trace)
     score_names = {call.kwargs["name"] for call in mock_lf.create_score.call_args_list}
     assert "retrieved_tokens" in score_names

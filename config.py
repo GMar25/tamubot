@@ -35,7 +35,7 @@ GOOGLE_API_RPM: int = int(os.getenv("GOOGLE_API_RPM", "20"))
 # --- TAMU AI API (OpenAI-compatible gateway; data privacy + institutional billing) ---
 TAMU_API_KEY = os.getenv("TAMU_API_KEY")
 TAMU_BASE_URL = os.getenv("TAMU_BASE_URL", "https://chat-api.tamu.ai/openai")
-TAMU_MODEL = os.getenv("TAMU_MODEL", "protected.gemini-2.5-flash-lite")
+TAMU_MODEL = os.getenv("TAMU_MODEL", "protected.gemini-2.5-flash")
 # When set, all RAG LLM calls route through TAMU API instead of direct Google API.
 # ingestion_pipeline/process_syllabi.py is excluded (uses PDF multimodal input).
 USE_TAMU_API: bool = bool(TAMU_API_KEY)
@@ -81,7 +81,7 @@ MAX_RETRIEVE_K: int = 60
 MAX_RERANK_K: int = 20
 
 # Maximum unique discovery courses to recommend in recursive path (after schedule filter).
-RECURRENT_MAX_RECOMMENDED_COURSES: int = 3
+RECURSIVE_MAX_RECOMMENDED_COURSES: int = 3
 
 # Stratified selection: chunks per (course_id, category) slot after reranking.
 CHUNKS_PER_SLOT: int = 2
@@ -176,6 +176,6 @@ V4_CHECKPOINTER_BACKEND: str = os.getenv("V4_CHECKPOINTER_BACKEND", "memory")
 V4_MAX_HISTORY_TURNS: int = int(os.getenv("V4_MAX_HISTORY_TURNS", "6"))
 
 # --- mem0 integration ---
-MEM0_ENABLED: bool = os.getenv("MEM0_ENABLED", "true").lower() == "true"
+MEM0_ENABLED: bool = os.getenv("MEM0_ENABLED", "false").lower() == "true"
 MEM0_API_KEY: str = os.getenv("MEM0_API_KEY", "")
-SESSION_CACHE_ENABLED: bool = os.getenv("SESSION_CACHE_ENABLED", "true").lower() == "true"
+SESSION_CACHE_ENABLED: bool = os.getenv("SESSION_CACHE_ENABLED", "false").lower() == "true"

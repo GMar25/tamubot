@@ -7,6 +7,7 @@ run:<experiment> columns are appended by eval scripts and ignored by load().
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 SCHEMA_COLUMNS = ["id", "question", "reference_answer", "expected_function", "human_notes"]
@@ -96,5 +97,17 @@ def append_run_column(path: Path, experiment: str, results: dict) -> None:
         if row_id in results:
             ws.cell(row=row_idx, column=col_idx, value=results[row_id])
 
-    wb.save(path)
-    wb.close()
+    # FUSE mounts (e.g. grpcfuse in Docker) fail to overwrite a file that has
+    # an active Excel lock (~$...) on the host. Try in-place first; on failure
+    # save next to the original with a _UPDATED suffix so results aren't lost.
+    try:
+        wb.save(path)
+    except OSError:
+        fallback = path.with_stem(path.stem + "_UPDATED")
+        wb.save(fallback)
+        import logging
+        logging.getLogger("tamubot.eval").warning(
+            f"Cannot overwrite {path.name} (file locked on host?) — saved to {fallback.name}"
+        )
+    finally:
+        wb.close()

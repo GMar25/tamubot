@@ -22,9 +22,10 @@ def _make_mock_result(function: str = "hybrid_course") -> dict:
     }
 
 
-def test_run_pipeline_default_returns_5tuple():
-    """Default call (no return_timing) still returns 5-tuple."""
+def test_run_pipeline_default_returns_6tuple():
+    """Default call (no return_timing) returns 6-tuple including answer."""
     mock_result = _make_mock_result()
+    mock_result["answer"] = "test answer"
     with patch("rag.graph.pipeline._get_graph") as mock_get_graph:
         mock_graph = MagicMock()
         mock_graph.invoke.return_value = mock_result
@@ -33,12 +34,14 @@ def test_run_pipeline_default_returns_5tuple():
         from rag.graph.pipeline import run_pipeline
         result = run_pipeline("test query")
 
-    assert len(result) == 5
+    assert len(result) == 6
+    assert result[5] == "test answer"
 
 
-def test_run_pipeline_return_timing_true_returns_6tuple():
-    """return_timing=True appends timing_ms dict as 6th element."""
+def test_run_pipeline_return_timing_true_returns_7tuple():
+    """return_timing=True appends timing_ms dict as 7th element."""
     mock_result = _make_mock_result()
+    mock_result["answer"] = "test answer"
     with patch("rag.graph.pipeline._get_graph") as mock_get_graph:
         mock_graph = MagicMock()
         mock_graph.invoke.return_value = mock_result
@@ -47,8 +50,9 @@ def test_run_pipeline_return_timing_true_returns_6tuple():
         from rag.graph.pipeline import run_pipeline
         result = run_pipeline("test query", return_timing=True)
 
-    assert len(result) == 6
-    timing = result[5]
+    assert len(result) == 7
+    assert result[5] == "test answer"
+    timing = result[6]
     assert isinstance(timing, dict)
     assert "router_node" in timing
     assert timing["router_node"] == 12.3
@@ -66,4 +70,4 @@ def test_run_pipeline_return_timing_empty_dict_on_missing():
         from rag.graph.pipeline import run_pipeline
         result = run_pipeline("test query", return_timing=True)
 
-    assert result[5] == {}
+    assert result[6] == {}
