@@ -30,12 +30,12 @@ EXAMPLES
   → {{"course_ids": ["CSCE 612"], "intent_type": "LOGISTICAL", "recursive_search": false, "rewritten_query": "CSCE 612 spring offering"}}
 - "What should I take after CSCE 612?"
   → {{"course_ids": ["CSCE 612"], "intent_type": "PLANNING", "recursive_search": true, "rewritten_query": "retrieve course CSCE 612"}}
-- "What courses are similar to CSCE 608?"
-  → {{"course_ids": ["CSCE 608"], "intent_type": "PLANNING", "recursive_search": true, "rewritten_query": "retrieve course CSCE 608"}}
-- "How do I register for classes?"
-  → {{"course_ids": [], "intent_type": "ADMINISTRATIVE", "recursive_search": false, "rewritten_query": "TAMU course registration process"}}
-- "What time does the department office open?"
-  → {{"course_ids": [], "intent_type": null, "recursive_search": false, "rewritten_query": "office hours"}}
+- "Which courses focus on cybersecurity?"
+  → {{"course_ids": [], "intent_type": "PLANNING", "recursive_search": false, "rewritten_query": "courses focusing on cybersecurity and software security"}}
+- "Tell me about the history of the Aggie Bonfire."
+  → {{"course_ids": [], "intent_type": null, "recursive_search": false, "rewritten_query": "history of Aggie Bonfire"}}
+- "Is there a swimming pool for graduate students?"
+  → {{"course_ids": [], "intent_type": null, "recursive_search": false, "rewritten_query": "campus swimming pool"}}
 - "Who won the game last night?"
   → {{"course_ids": [], "intent_type": null, "recursive_search": false, "rewritten_query": "Who won the game last night?"}}
 
