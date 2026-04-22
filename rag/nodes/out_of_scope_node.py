@@ -6,10 +6,10 @@ canned string.
 """
 from __future__ import annotations
 
-import config
 from langfuse import get_client as _lf_get_client
 from langfuse import observe
 
+import config
 from rag.graph.middleware import error_guard_middleware, timing_middleware
 from rag.prompts import OUT_OF_SCOPE_SYSTEM
 from rag.state.pipeline_state import PipelineState

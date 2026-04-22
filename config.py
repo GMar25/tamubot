@@ -81,7 +81,7 @@ MAX_RETRIEVE_K: int = 60
 MAX_RERANK_K: int = 20
 
 # Maximum unique discovery courses to recommend in recursive path (after schedule filter).
-RECURRENT_MAX_RECOMMENDED_COURSES: int = 3
+RECURSIVE_MAX_RECOMMENDED_COURSES: int = 3
 
 # Stratified selection: chunks per (course_id, category) slot after reranking.
 CHUNKS_PER_SLOT: int = 2

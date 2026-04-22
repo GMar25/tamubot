@@ -84,7 +84,7 @@ def retrieval_node(state: PipelineState) -> dict:
                     for _ in course_ids
                 ]
                 futures = {}
-                with ThreadPoolExecutor(max_workers=len(course_ids)) as executor:
+                with ThreadPoolExecutor(max_workers=min(len(course_ids), 8)) as executor:
                     for wctx, cid in zip(worker_ctxs, course_ids):
                         futures[executor.submit(wctx.run, hybrid_search, rewritten_query, cid, retrieve_k)] = cid
                     for future in as_completed(futures):
@@ -106,7 +106,11 @@ def retrieval_node(state: PipelineState) -> dict:
                 existing_cache = state.get("retrieval_cache", {})
                 retrieval_cache_update = {**existing_cache, cache_key: reranked}
 
-            result: dict = {"retrieved_chunks": reranked, "retrieval_cache": retrieval_cache_update, "node_trace": node_trace}
+            result: dict = {
+                "retrieved_chunks": reranked,
+                "retrieval_cache": retrieval_cache_update,
+                "node_trace": node_trace,
+            }
             if errors:
                 result["retrieval_partial_errors"] = errors
             return result
