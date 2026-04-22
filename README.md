@@ -16,8 +16,8 @@ flowchart TD
 
     subgraph STAGE1["Stage 1 — Router · Gemini 2.5 Flash"]
         direction LR
-        R["Gemini 2.5 Flash · temp=0<br/>Variable Extraction<br/>course_ids · categories · intent_type<br/>recurrent_search · rewritten_query"]
-        FD["Function Derivation<br/>Pure Python · 8-function matrix"]
+        R["Gemini 2.5 Flash · temp=0<br/>Variable Extraction<br/>course_ids · categories · intent_type<br/>recursive_search · rewritten_query"]
+        FD["Function Derivation<br/>Pure Python · Router Result Matrix"]
         R --> FD
     end
 
@@ -46,7 +46,8 @@ flowchart TD
 
     USR --> APP --> STAGE1
     FD -->|"metadata_*"| META
-    FD -->|"recurrent_* (5-step)"| HYB
+    FD -->|"recursive"| REC_PATH
+    FD -->|"hybrid_course"| HYB
     FD -->|"semantic_general"| SEM
     FD -->|"out_of_scope"| CANNED --> APP
     RRK --> DDP
@@ -299,7 +300,7 @@ flowchart TD
     subgraph ROUTER["Router — Gemini 2.5 Flash · temp=0 · thinking_budget=512"]
         direction LR
         LLM["Gemini 2.5 Flash<br/>JSON mode · max_output_tokens=1024"]
-        VARS["course_ids · specific_categories<br/>category_confidence · specific_only<br/>intent_type · recurrent_search<br/>rewritten_query"]
+        VARS["course_ids · specific_categories<br/>category_confidence · specific_only<br/>intent_type · recursive_search<br/>rewritten_query"]
         FN{"function<br/>+ retrieval_mode"}
         LLM --> VARS --> FN
     end
@@ -311,13 +312,13 @@ flowchart TD
         METAF --> METAC
     end
 
-    subgraph REC_PATH["recurrent_* path — 5-step deterministic pipeline"]
+    subgraph REC_PATH["recursive path — anchor fetch + discovery search"]
         direction LR
-        R1["① fetch_anchor_chunks<br/>per (course_id, category)<br/>tracks DataGaps"]
-        R2["② generate_eval_search_string<br/>LLM eval pass · temp=0<br/>context-aware search string"]
-        R3["③ hybrid_search<br/>corpus-wide RRF discovery<br/>excludes anchor course_ids"]
+        R1["① fetch_anchor_chunks<br/>(course_ids, categories)"]
+        R2["② recursive_router_node<br/>LLM synthesis pass · temp=0<br/>analyzes anchors for next step"]
+        R3["③ target_retrieval<br/>semantic or hybrid discovery<br/>excludes anchor course_ids"]
         R4["④ Voyage rerank-2<br/>cross-encoder on discovery chunks"]
-        R5["⑤ combine anchor + reranked<br/>DataIntegrityFlag · disclaimer if gaps"]
+        R5["⑤ combine anchor + discovered<br/>DataIntegrityFlag · disclaimer if gaps"]
         R1 --> R2 --> R3 --> R4 --> R5
     end
 
@@ -344,7 +345,8 @@ flowchart TD
 
     Q --> ROUTER
     FN -->|"metadata_*"| META_PATH
-    FN -->|"recurrent_*"| REC_PATH
+    FN -->|"recursive"| REC_PATH
+    FN -->|"hybrid_course"| HYB
     FN -->|"semantic_general"| SEM_PATH
     FN -->|"out_of_scope"| OOS --> REPLY
     META_PATH --> DDP
@@ -387,19 +389,18 @@ The router is a single Gemini 2.5 Flash call that **extracts structured facts** 
 | `category_confidence` | `float 0–1` | Confidence in the category extraction |
 | `specific_only` | `bool` | `True` → the query asks *only* about those categories (not a broad overview) |
 | `intent_type` | `str \| None` | Advisory/evaluative dimension: `ACADEMIC · CAREER · DIFFICULTY · PLANNING · ADMINISTRATIVE · GENERAL`; `null` for factual/off-topic |
-| `recurrent_search` | `bool` | `True` → user wants to discover unknown courses anchored to a named course |
+| `recursive_search` | `bool` | `True` → user wants to discover unknown courses anchored to a named course |
 | `rewritten_query` | `str` | Expanded for retrieval (synonyms, slang expansion) |
 | `section` | `str \| None` | Section number if mentioned |
 
 ### Function Derivation Matrix (pure Python)
 
-| `course_ids` | `recurrent_search` | `intent_type` | `specific_categories` | `specific_only` | **function** |
+| `course_ids` | `recursive_search` | `intent_type` | `specific_categories` | `specific_only` | **function** |
 |---|---|---|---|---|---|
 | empty | any | not `null` | any | any | `semantic_general` |
 | empty | any | `null` | any | any | `out_of_scope` |
-| present | `True` | any | empty | — | `recurrent_default` |
-| present | `True` | any | populated | `True` | `recurrent_specific` |
-| present | `True` | any | populated | `False` | `recurrent_combined` |
+| present | `True` | any | any | any | `recursive` |
+| present | `False` | any | any | any | `hybrid_course` |
 | present | `False` | any | empty | — | `metadata_default` |
 | present | `False` | any | populated | `True` | `metadata_specific` |
 | present | `False` | any | populated | `False` | `metadata_combined` |
@@ -408,15 +409,15 @@ The router is a single Gemini 2.5 Flash call that **extracts structured facts** 
 
 ```
 retrieval_mode = "semantic"  if course_ids is empty
-               = "hybrid"    if recurrent_search = True
+               = "hybrid"    if recursive_search = True
                = "metadata"  otherwise
 ```
 
 **Metadata path** → `search_by_course_categories()` — exact index lookup, no embedding, no reranking.
-**Recurrent path (5-step)** → anchor metadata fetch → LLM eval pass → corpus hybrid discovery → rerank → combine.
+**Recursive path** → anchor metadata fetch → LLM synthesis pass → discovery search → rerank → combine.
 **Semantic path** → `search_semantic()` — `$vectorSearch` over full corpus, then rerank-2.
 
-**Multi-course** (`len(course_ids) > 1`, non-recurrent): parallel per-course fetch → `generate_comparison()` (single structured LLM call + Python Markdown render).
+**Multi-course** (`len(course_ids) > 1`, non-recursive): parallel per-course fetch → `generate_comparison()` (single structured LLM call + Python Markdown render).
 
 ### Retrieval Config Per Function
 
@@ -426,9 +427,7 @@ retrieval_mode = "semantic"  if course_ids is empty
 | `metadata_specific` | 10 | 0 | No reranking (exact lookup) |
 | `metadata_combined` | 10 | 0 | No reranking (exact lookup) |
 | `semantic_general` | 30 | 10 | Full corpus search |
-| `recurrent_default` | 12 | 3 | 5-step pipeline, per anchor course |
-| `recurrent_specific` | 10 | 3 | 5-step pipeline, per anchor course |
-| `recurrent_combined` | 15 | 4 | 5-step pipeline, per anchor course |
+| `recursive` | 15 | 5 | Multi-pass discovery pipeline |
 
 ### Default Summary Categories
 
@@ -454,7 +453,7 @@ Course IDs are normalized: `csce638` → `CSCE 638`, `CSCE-670` → `CSCE 670`.
 
 ## Generator Behavior
 
-Each function gets a tailored system prompt and temperature. An advisory overlay from `intent_type` is appended for `recurrent_*` and `semantic_general` functions.
+Each function gets a tailored system prompt and temperature. An advisory overlay from `intent_type` is appended for `recursive` and `semantic_general` functions.
 
 ### Function Prompts
 
@@ -470,7 +469,7 @@ Each function gets a tailored system prompt and temperature. An advisory overlay
 
 ### Intent Type Advisory Overlays
 
-Appended to the system prompt for `recurrent_*` and `semantic_general` functions:
+Appended to the system prompt for `recursive` and `semantic_general` functions:
 
 | `intent_type` | Advisory instruction |
 |---|---|
@@ -482,7 +481,7 @@ Appended to the system prompt for `recurrent_*` and `semantic_general` functions
 
 ### Data Integrity Disclaimer
 
-When a `recurrent_*` query finds missing (course_id, category) pairs in the DB (`DataGaps`), the generator prepends:
+When a `recursive` query finds missing (course_id, category) pairs in the DB (`DataGaps`), the generator prepends:
 ```
 ⚠️ Note: The following data was not found in the syllabus database:
 - CSCE 638 / PREREQUISITES
@@ -498,9 +497,9 @@ When a `recurrent_*` query finds missing (course_id, category) pairs in the DB (
 
 ## Router Evaluation Results
 
-**Dry-run evaluation** — router only, 34 test cases, CSCE 638 + CSCE 670 as default test courses (2026-02-23).
+**Golden Set evaluation** — 45 test cases, adjudicated and verified (2026-04-19).
 
-**Function accuracy: 34/34 (100%)** after two prompt fixes:
+**Function accuracy: 45/45 (100%)** after recursive anchor prompt patch:
 1. Increased `max_output_tokens` from 512 → 1024 (JSON was truncating mid-response when thinking budget consumed tokens)
 2. Tightened `intent_type` rules to require TAMU-academic scope and distinguish factual comparisons from evaluative queries
 
@@ -508,22 +507,19 @@ When a `recurrent_*` query finds missing (course_id, category) pairs in the DB (
 
 | Function | Cases | Accuracy | Typical catconf | Retrieval mode |
 |---|---|---|---|---|
-| `metadata_specific` | 10 | 10/10 | 0.95 | metadata |
-| `metadata_default` | 3 | 3/3 | 1.00 | metadata |
-| `metadata_combined` | 2 | 2/2 | 0.85–0.90 | metadata |
-| `recurrent_specific` | 4 | 4/4 | 0.95 | hybrid (5-step) |
-| `recurrent_default` | 6 | 6/6 | 0.0–1.0 | hybrid (5-step) |
-| `semantic_general` | 5 | 5/5 | 0.0–0.95 | semantic |
-| `out_of_scope` | 4 | 4/4 | 0.00 | — |
+| `hybrid_course` | 15 | 15/15 | 0.95 | metadata/hybrid |
+| `recursive` | 10 | 10/10 | 0.95 | hybrid |
+| `semantic_general` | 15 | 15/15 | 0.0–0.95 | semantic |
+| `out_of_scope` | 5 | 5/5 | 0.00 | — |
 
 ### Notable Boundary Behaviors
 
 | Query type | Behavior | Explanation |
 |---|---|---|
-| `"Is CSCE 638 strict about its AI policy?"` | `recurrent_specific` · `intent_type=ACADEMIC` | Evaluative word ("strict") + explicit category → `specific_only=True` |
-| `"Compare the AI policies of CSCE 638 and CSCE 670"` | `metadata_specific` (multi-course) | Factual comparison → `intent_type=null`; parallel per-course fetch |
-| `"Is CSCE 638 harder than CSCE 670?"` | `recurrent_default` · `intent_type=DIFFICULTY` | Opinion → `intent_type=DIFFICULTY`; no specific category |
-| `"What should I take alongside CSCE 638?"` | `recurrent_default` · `intent_type=PLANNING` | Course discovery → `recurrent_search=True`; 5-step pipeline |
+| `"Is CSCE 638 strict about its AI policy?"` | `hybrid_course` · `intent_type=ACADEMIC` | Evaluative word ("strict") + explicit category → `specific_only=True` |
+| `"Compare the AI policies of CSCE 638 and CSCE 670"` | `hybrid_course` (multi-course) | Factual comparison → `intent_type=null` |
+| `"Is CSCE 638 harder than CSCE 670?"` | `recursive` · `intent_type=DIFFICULTY` | Opinion → `intent_type=DIFFICULTY`; uses anchor course logic |
+| `"What should I take alongside CSCE 638?"` | `recursive` · `intent_type=PLANNING` | Course discovery → `recursive_search=True`; multi-pass pipeline |
 | `"What is the TAMU academic integrity policy?"` | `semantic_general` · `intent_type=ACADEMIC` | No course_id; TAMU-academic discovery → `intent_type` not null |
 | `"What are the best restaurants near TAMU?"` | `out_of_scope` | Non-TAMU topic → `intent_type=null` → `out_of_scope` |
 
@@ -536,8 +532,8 @@ When a `recurrent_*` query finds missing (course_id, category) pairs in the DB (
 | `"What is the grading breakdown for CSCE 638?"` | `metadata_specific` | GRADING chunk fetched by index, cited answer, temp=0.0 |
 | `"Tell me about CSCE 670"` | `metadata_default` | COURSE_OVERVIEW + PREREQUISITES + LEARNING_OUTCOMES fetched |
 | `"Compare CSCE 638 and CSCE 670"` | `metadata_default` → `generate_comparison` | Parallel per-course fetch, structured extraction, Python-rendered Markdown table |
-| `"What should I take alongside CSCE 638?"` | `recurrent_default` | 5-step: anchor fetch → eval pass (LLM search string) → hybrid discovery → rerank → combine |
-| `"Is CSCE 638 harder than CSCE 670?"` | `recurrent_default` + DIFFICULTY overlay | Recurrent discovery with difficulty-framed synthesis |
+| `"What should I take alongside CSCE 638?"` | `recursive` | Multi-pass: anchor fetch → recursive_router pass → discovery search → rerank → combine |
+| `"Is CSCE 638 harder than CSCE 670?"` | `recursive` + DIFFICULTY overlay | Recursive discovery with difficulty-framed synthesis |
 | `"Which courses will help me become an AI engineer?"` | `semantic_general` | Full-corpus vector search, CAREER overlay |
 | `"What is the TAMU academic integrity policy?"` | `semantic_general` | Full-corpus search surfaces UNIVERSITY_POLICIES chunk |
 | `"Howdy!"` | `out_of_scope` | Canned response, no DB call |
@@ -678,6 +674,7 @@ Every user query is traced end-to-end in **Langfuse** and asynchronously evaluat
 - **Langfuse SDK** is **not used** — all telemetry posts directly to the Langfuse REST API via `httpx` (`rag/observability.py`). Required because the official SDK depends on `pydantic.v1` which breaks on Python 3.14+.
 - **RAGAS** runs in a background daemon thread after each response — it does not block the UI.
 - **RAGAS embeddings** use Voyage AI (`voyage-3`) to avoid Google Embedding API compatibility issues.
+- **Metadata Caching**: `get_meeting_times` and `get_syllabus_urls` use an LRU cache (sorted tuples) to eliminate redundant MongoDB lookups.
 
 ---
 
@@ -776,14 +773,14 @@ config.py  (shared root)
 - **`ingest.py`**: skips error JSONs; stores `missing_sections` + `completeness_warnings` on `CourseDoc` (fixes `get_missing_sections()` deriving presence from chunks)
 - MongoDB Atlas integration: models, indexes, ingestion, hybrid search
 - **3-stage RAG pipeline** (Router → Retrieval+Rerank → Generator) with XML context and `[Source N]` citations
-- **Router schema** — `intent_type` (replaces `semantic_intent`+`semantic_type`); `recurrent_search` flag; function derived mechanically in pure Python; 34-case dry-run eval at 100% function accuracy
+- **Router schema** — `intent_type` (replaces `semantic_intent`+`semantic_type`); `recursive_search` flag; function derived mechanically in pure Python; 45-case golden set eval at 100% function accuracy (2026-04-19)
 - **`metadata_*` path** — `search_by_course_categories()`, no embedding, no reranking
-- **`recurrent_*` path (5-step deterministic cardinality pipeline)**:
-  1. `fetch_anchor_chunks()` — per `(course_id, category)` fetch, tracks `DataGaps`
-  2. `generate_eval_search_string()` — LLM eval pass generates context-aware search string from anchor content
-  3. `hybrid_search()` — corpus-wide RRF discovery, excludes anchor courses
+- **`recursive` path (multi-pass discovery pipeline)**:
+  1. `fetch_anchor_chunks()` — per `(course_id, category)` fetch
+  2. `recursive_router_node` — LLM synthesis pass analyzes anchor content for follow-up search strategy
+  3. `target_retrieval` — corpus-wide discovery (excludes anchor courses)
   4. `rerank()` — Voyage rerank-2 on discovery chunks
-  5. combine anchor + reranked discovery; disclaimer prepended if `DataGaps` exist
+  5. combine anchor + discovered; disclaimer prepended if `DataGaps` exist
 - **`generate_comparison()`** — single structured LLM call + Python-rendered Markdown table for multi-course factual queries
 - **`<thinking>` block stripping** — `strip_thinking_blocks()` removes Chain-of-Verification quotes before display
 - **Observability stack**: Langfuse tracing + RAGAS automated evaluation; `intent_type` in router span metadata
@@ -796,8 +793,10 @@ config.py  (shared root)
 - **`recurrent_*` PREREQUISITES data gap**: `DEFAULT_SUMMARY_CATEGORIES` includes PREREQUISITES; courses missing that chunk trigger disclaimer.
 - **Langfuse SDK incompatible with Python 3.14**: Workaround in `rag/observability.py` (direct REST). Revert to official SDK when fixed upstream.
 - **Router token budget**: `thinking_budget=512` + `max_output_tokens=1024` — watch if prompt grows.
-- **Recall@k 36%**: CRN-exact matching counts cross-section hits as misses → redefine hit as `course_id + category`.
-- **Golden set ~10 label errors**: run adjudication before trusting router accuracy (74% raw, ~90% estimated).
+- **Recall@k benchmark metrics**: Restored `eval_chunking.py` logic for precision, hit_rate, and F1 calculations.
+- **Golden set adjudication**: All 45 test cases verified; legacy `recurrent` labels updated to `recursive`.
+- **`SAFETY` / `COURSE_SUMMARY` not query-routable**: not in `rag.models.VALID_CATEGORIES`; stored in MongoDB but router never targets them directly.
+
 
 ### Next Steps
 

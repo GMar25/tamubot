@@ -70,6 +70,9 @@ def _make_invoke_kwargs(trace, thread_config: Optional[dict] = None) -> dict:
 
 def _build_router_result(result: dict):
     """Reconstruct a RouterResult from state fields for backward compat with app.py."""
+    if "router_result" in result and result["router_result"] is not None:
+        return result["router_result"]
+        
     from rag.router import RouterResult
     return RouterResult(
         course_ids=result.get("course_ids", []),

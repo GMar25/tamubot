@@ -65,6 +65,7 @@ class PipelineState(TypedDict, total=False):
     timing_ms: dict[str, float]
     error: Optional[str]
     node_trace: list[str]
+    retrieval_partial_errors: list[str]   # per-course failures from parallel hybrid_course path
 
 
 # Backward-compat alias — history_inject_node and history_update_node use this name

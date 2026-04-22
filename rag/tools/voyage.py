@@ -10,7 +10,8 @@ Canonical location: rag/tools/voyage.py
 from __future__ import annotations
 
 import math
-from collections import defaultdict
+import threading
+from collections import OrderedDict, defaultdict
 from typing import Optional
 
 import voyageai
@@ -31,12 +32,61 @@ def _get_client() -> voyageai.Client:
     return _voyage
 
 
+# ---------------------------------------------------------------------------
+# Embedding cache — thread-safe OrderedDict bounds memory to 512 strings.
+# Implements Double-Checked Locking to guarantee exactly 1 Voyage API call
+# per unique query string, structurally preventing the thundering herd problem
+# when multiple retrieval workers fan out simultaneously on a cold cache miss.
+# ---------------------------------------------------------------------------
+
+_EMBED_CACHE_MAXSIZE = 512
+_embed_cache: OrderedDict[str, tuple[float, ...]] = OrderedDict()
+_embed_lock = threading.Lock()
+
+
+def _embed_query_cached(text: str) -> tuple[float, ...]:
+    """Return a cached embedding tuple, fetching from Voyage API if missing.
+    
+    Uses Double-Checked Locking:
+    1. Outer lock-free read (fast path for cache hits)
+    2. Lock acquisition on miss
+    3. Inner re-check (prevents duplicate API calls from racing threads)
+    4. API fetch and LRU eviction if bounds exceeded
+    """
+    # 1. Outer check (Fast path)
+    cached = _embed_cache.get(text)
+    if cached is not None:
+        return cached
+
+    # 2. Lock acquire (Slow path for cold misses)
+    with _embed_lock:
+        # 3. Inner re-check
+        cached = _embed_cache.get(text)
+        if cached is not None:
+            # Another thread handled it while we waited
+            return cached
+            
+        client = _get_client()
+        result = client.embed([text], model=EMBEDDING_MODEL, input_type="query")
+        emb = tuple(result.embeddings[0])
+        
+        # 4. Insert and evict LRU
+        _embed_cache[text] = emb
+        if len(_embed_cache) > _EMBED_CACHE_MAXSIZE:
+            _embed_cache.popitem(last=False)  # pop oldest
+            
+        return emb
+
+
 @observe(name="pipeline.retrieval.embed")
 def embed_query(text: str) -> list[float]:
-    """Embed a query string using Voyage AI voyage-3."""
-    client = _get_client()
-    result = client.embed([text], model=EMBEDDING_MODEL, input_type="query")
-    return result.embeddings[0]
+    """Embed a query string using Voyage AI voyage-3.
+
+    Results are cached in-process (up to 512 strings, thread-safe) so that
+    parallel retrieval threads share the embedding and strictly avoid
+    duplicate API round-trips for the same string.
+    """
+    return list(_embed_query_cached(text))
 
 
 def knee_filter(

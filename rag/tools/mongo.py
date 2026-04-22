@@ -13,6 +13,7 @@ Canonical location: rag/tools/mongo.py
 from __future__ import annotations
 
 import os
+from functools import lru_cache
 from typing import Any, Optional
 
 from langfuse import observe
@@ -181,18 +182,14 @@ def fetch_anchor_chunks(
     return all_chunks, data_gaps, data_integrity
 
 
-def get_meeting_times(course_ids: list[str]) -> dict[str, Any]:
-    """Return {course_id: meeting_times_string} for the given course IDs.
-
-    Courses with no meeting_times field (async/online) map to None.
-    When multiple sections exist for the same course_id, the first non-None value wins.
-    """
+@lru_cache(maxsize=128)
+def _get_meeting_times_cached(course_ids: tuple[str, ...]) -> dict[str, Any]:
     db = _get_db()
     result: dict[str, Any] = {}
     if not course_ids:
         return result
     docs = db[COURSES_COLLECTION].find(
-        {"course_id": {"$in": course_ids}},
+        {"course_id": {"$in": list(course_ids)}},
         {"course_id": 1, "meeting_times": 1, "_id": 0},
     )
     for doc in docs:
@@ -205,14 +202,25 @@ def get_meeting_times(course_ids: list[str]) -> dict[str, Any]:
     return result
 
 
-def get_syllabus_urls(course_ids: list[str]) -> dict[str, str]:
-    """Return {course_id: syllabus_url} for the given course IDs."""
+def get_meeting_times(course_ids: list[str]) -> dict[str, Any]:
+    """Return {course_id: meeting_times_string} for the given course IDs.
+
+    Courses with no meeting_times field (async/online) map to None.
+    When multiple sections exist for the same course_id, the first non-None value wins.
+    """
+    if not course_ids:
+        return {}
+    return dict(_get_meeting_times_cached(tuple(sorted(set(course_ids)))))
+
+
+@lru_cache(maxsize=128)
+def _get_syllabus_urls_cached(course_ids: tuple[str, ...]) -> dict[str, str]:
     db = _get_db()
     result: dict[str, str] = {}
     if not course_ids:
         return result
     docs = db[COURSES_COLLECTION].find(
-        {"course_id": {"$in": course_ids}},
+        {"course_id": {"$in": list(course_ids)}},
         {"course_id": 1, "syllabus_url": 1, "_id": 0},
     )
     for doc in docs:
@@ -220,6 +228,13 @@ def get_syllabus_urls(course_ids: list[str]) -> dict[str, str]:
         if url:
             result[doc["course_id"]] = url
     return result
+
+
+def get_syllabus_urls(course_ids: list[str]) -> dict[str, str]:
+    """Return {course_id: syllabus_url} for the given course IDs."""
+    if not course_ids:
+        return {}
+    return dict(_get_syllabus_urls_cached(tuple(sorted(set(course_ids)))))
 
 
 def get_missing_sections(course_id: str) -> list[str]:

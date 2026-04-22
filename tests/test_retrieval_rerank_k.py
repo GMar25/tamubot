@@ -98,3 +98,80 @@ def test_recursive_retrieval_rerank_uses_rerank_k_not_all_chunks():
     assert called_top_k == expected_rerank_k, (
         f"Expected top_k={expected_rerank_k} (rerank_k), got top_k={called_top_k}"
     )
+
+
+# ---------------------------------------------------------------------------
+# retrieval_node — parallel multi-course
+# ---------------------------------------------------------------------------
+
+def test_parallel_multi_course_calls_hybrid_search_once_per_course():
+    """With N course IDs, hybrid_search must be called exactly N times in parallel."""
+    from rag.nodes.retrieval_node import retrieval_node
+
+    course_ids = ["CSCE 638", "CSCE 670", "CSCE 625"]
+    fake_chunks_per_course = [{"content": f"chunk {cid}", "score": 0.9, "course_id": cid}
+                               for cid in course_ids]
+    rerank_k = config.PER_COURSE_K["hybrid_course"]["rerank_k"] * len(course_ids)
+
+    state = {
+        "function": "hybrid_course",
+        "course_ids": course_ids,
+        "rewritten_query": "compare ML courses",
+        "node_trace": [],
+        "retrieval_cache": {},
+    }
+
+    call_log: list[str] = []
+
+    def fake_hybrid_search(query, cid, k):
+        call_log.append(cid)
+        return [{"content": f"result for {cid}", "score": 0.9, "course_id": cid}]
+
+    with patch("rag.tools.mongo.hybrid_search", side_effect=fake_hybrid_search), \
+         patch("rag.tools.voyage.rerank",
+               side_effect=lambda q, c, top_k, **kw: c[:top_k]) as mock_rerank:
+        result = retrieval_node(state)
+
+    # Every course must have been searched
+    assert sorted(call_log) == sorted(course_ids), (
+        f"Expected calls for {course_ids}, got {call_log}"
+    )
+    # Rerank called exactly once with the combined pool
+    mock_rerank.assert_called_once()
+    # No errors
+    assert "retrieval_partial_errors" not in result
+    assert "retrieval" in result["node_trace"]
+
+
+def test_parallel_multi_course_handles_partial_failure_gracefully():
+    """If one course's search raises, the node should still return results from the others."""
+    from rag.nodes.retrieval_node import retrieval_node
+
+    good_course = "CSCE 638"
+    bad_course = "CSCE 999"  # will raise
+
+    def fake_hybrid_search(query, cid, k):
+        if cid == bad_course:
+            raise ConnectionError(f"Simulated network failure for {cid}")
+        return [{"content": f"result for {cid}", "score": 0.9, "course_id": cid}]
+
+    state = {
+        "function": "hybrid_course",
+        "course_ids": [good_course, bad_course],
+        "rewritten_query": "compare ML courses",
+        "node_trace": [],
+        "retrieval_cache": {},
+    }
+
+    with patch("rag.tools.mongo.hybrid_search", side_effect=fake_hybrid_search), \
+         patch("rag.tools.voyage.rerank",
+               side_effect=lambda q, c, top_k, **kw: c[:top_k]):
+        result = retrieval_node(state)
+
+    # Node must not crash and must surface partial results
+    assert isinstance(result["retrieved_chunks"], list)
+    # Good course chunks still present
+    assert any(c["course_id"] == good_course for c in result["retrieved_chunks"])
+    # Error surfaced in state
+    assert "retrieval_partial_errors" in result
+    assert any(bad_course in e for e in result["retrieval_partial_errors"])

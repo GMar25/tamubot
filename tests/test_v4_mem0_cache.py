@@ -189,7 +189,7 @@ def test_retrieval_cache_miss_calls_retrieval_and_writes_cache():
 
     with patch("config.SESSION_CACHE_ENABLED", True), \
          patch("rag.tools.mongo.hybrid_search", return_value=chunks) as mock_hs, \
-         patch("rag.tools.voyage.rerank", side_effect=lambda q, c, top_k: c):
+         patch("rag.tools.voyage.rerank", side_effect=lambda q, c, top_k, **kwargs: c):
         result = retrieval_node(state)
 
     mock_hs.assert_called_once()
