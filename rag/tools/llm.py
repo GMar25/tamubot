@@ -213,8 +213,7 @@ def _build_genai_config(
     )
     if system_instruction:
         kwargs["system_instruction"] = system_instruction
-    if thinking_budget > 0:
-        kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=thinking_budget)
+    kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=thinking_budget)
     if response_schema is not None:
         kwargs["response_mime_type"] = "application/json"
         kwargs["response_schema"] = response_schema

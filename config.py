@@ -30,7 +30,7 @@ GENERATION_MODEL = os.getenv("GENERATION_MODEL", "gemini-2.5-flash")
 VALIDATION_MODEL = os.getenv("VALIDATION_MODEL", "gemini-2.5-flash-lite")
 
 # --- Google AI rate limiter ---
-GOOGLE_API_RPM: int = int(os.getenv("GOOGLE_API_RPM", "20"))
+GOOGLE_API_RPM: int = int(os.getenv("GOOGLE_API_RPM", "30"))
 
 # --- TAMU AI API (OpenAI-compatible gateway; data privacy + institutional billing) ---
 TAMU_API_KEY = os.getenv("TAMU_API_KEY")
