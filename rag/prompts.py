@@ -34,6 +34,10 @@ EXAMPLES
   → {{"course_ids": [], "intent_type": "PLANNING", "recursive_search": false, "rewritten_query": "courses focusing on cybersecurity and software security"}}
 - "Tell me about the history of the Aggie Bonfire."
   → {{"course_ids": [], "intent_type": null, "recursive_search": false, "rewritten_query": "history of Aggie Bonfire"}}
+- "When are the registration dates for Fall 2026?"
+  → {{"course_ids": [], "intent_type": null, "recursive_search": false, "rewritten_query": "registration dates"}}
+- "Can you help me reset my TAMU NetID password?"
+  → {{"course_ids": [], "intent_type": null, "recursive_search": false, "rewritten_query": "NetID reset"}}
 - "Is there a swimming pool for graduate students?"
   → {{"course_ids": [], "intent_type": null, "recursive_search": false, "rewritten_query": "campus swimming pool"}}
 - "Who won the game last night?"
