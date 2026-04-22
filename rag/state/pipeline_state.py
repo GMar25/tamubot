@@ -6,7 +6,7 @@ these typed fields; no other shared state exists.
 from __future__ import annotations
 
 import re
-from typing import Optional
+from typing import Any, Optional
 
 from typing_extensions import TypedDict
 
@@ -32,6 +32,7 @@ class PipelineState(TypedDict, total=False):
     rewritten_query: str             # router lookup query; overwritten by recursive_router
 
     # --- Router fields ---
+    router_result: Optional[Any]     # Original RouterResult object
     function: str                    # "hybrid_course"|"recursive"|"semantic_general"|"out_of_scope"
     course_ids: list[str]
     intent_type: Optional[str]
