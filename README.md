@@ -12,6 +12,8 @@ TamuBot follows a **3-stage RAG pipeline** orchestrated by LangGraph:
 
 The pipeline runs as a LangGraph state machine with conversation memory (mem0 Cloud), session caching, and SQLite checkpointing.
 
+![Architecture](docs/architecture.png)
+
 ## Tech Stack
 
 ### Frontend

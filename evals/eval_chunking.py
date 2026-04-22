@@ -130,6 +130,7 @@ from rag.observability import (  # noqa: E402
     EvalInputs,
     chunking_config,
     create_trace,
+    finalize_trace,
     get_langfuse,
     run_evals,
 )
@@ -371,8 +372,10 @@ def run_eval(
             i, len(golden_items), span=span,
         )
 
-        # End trace BEFORE RAGAS — trace latency = router + retrieval only.
+        # End trace BEFORE RAGAS — finalize exits the OTEL context so RAGAS
+        # observations don't nest under the benchmark span and inflate its latency.
         trace_id = trace_id_for_item
+        span_id = span.id if span is not None else None
         if trace is not None:
             try:
                 if row is not None:
@@ -385,6 +388,8 @@ def run_eval(
                     )
             except Exception as e:
                 logger.warning(f"Langfuse trace update failed for '{question[:40]}': {e}")
+            output_str = row.get("router_function", "") if row else "skipped"
+            finalize_trace(trace, output_str)
 
         if row is None:
             # Still link skipped items to the dataset run so they appear in Langfuse
@@ -401,7 +406,7 @@ def run_eval(
                     logger.warning(f"Langfuse skip link failed for '{question[:40]}': {e}")
             continue
 
-        # Run RAGAS after trace update — doesn't inflate trace latency.
+        # Run RAGAS after trace finalized — scores posted by trace_id, not OTEL context.
         if ragas_enabled and row["_chunks"] and reference:
             contexts = [c.get("content", "") for c in row["_chunks"]]
             ragas_scores = run_evals(obs, EvalInputs(
@@ -453,7 +458,7 @@ def run_eval(
                     },
                     dataset_item_id=lf_item_ids.get(question, _item_id(question)),
                     trace_id=trace_id,
-                    observation_id=span.id,
+                    observation_id=span_id,
                 )
             except Exception as e:
                 logger.warning(f"Langfuse scoring failed for '{question[:40]}': {e}")

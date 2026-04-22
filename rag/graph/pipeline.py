@@ -1,4 +1,10 @@
-"""RAG pipeline entry point."""
+"""RAG pipeline entry point.
+
+Tracing: The OTEL context is set by ``create_trace()`` (rag/observability/tracing.py)
+before the pipeline runs.  Individual functions decorated with ``@observe`` (router,
+retrieval helpers, generator) automatically nest under that root trace via OTEL
+context propagation — no LangChain ``CallbackHandler`` needed.
+"""
 from __future__ import annotations
 
 import logging
@@ -8,13 +14,6 @@ from rag.graph.builder import build_graph, build_graph_with_memory
 from rag.state.pipeline_state import PipelineState
 
 _logger = logging.getLogger("tamubot")
-
-try:
-    from langfuse.langchain import CallbackHandler
-    from langfuse.types import TraceContext as _LFTraceContext
-except ImportError:
-    CallbackHandler = None  # type: ignore[assignment,misc]
-    _LFTraceContext = None  # type: ignore[assignment,misc]
 
 _graph = None
 _eval_graph = None
@@ -50,20 +49,14 @@ def _get_eval_graph():
 
 
 def _make_invoke_kwargs(trace, thread_config: Optional[dict] = None) -> dict:
-    """Build kwargs for graph.invoke(): callbacks from trace, config from thread_config."""
-    callbacks = []
-    if trace is not None and CallbackHandler is not None:
-        try:
-            callbacks = [CallbackHandler(trace_context=_LFTraceContext(trace_id=trace.trace_id))]
-        except Exception:
-            pass
+    """Build kwargs for graph.invoke(): config from thread_config only.
 
+    The ``trace`` parameter is accepted for API compatibility but no longer
+    used — tracing is handled by the OTEL context set in ``create_trace()``.
+    """
     config: dict = {}
     if thread_config:
         config.update(thread_config)
-    if callbacks:
-        existing = config.get("callbacks", [])
-        config["callbacks"] = existing + callbacks
 
     return {"config": config} if config else {}
 
@@ -90,11 +83,11 @@ def run_pipeline(
     trace=None,
     return_timing: bool = False,
 ) -> tuple:
-    """Run the RAG pipeline (stateless).
+    """Run the RAG pipeline (stateless), including generation.
 
     Returns:
-        (chunks, router_result, data_gaps, data_integrity, conflicted_course_ids)
-        or if return_timing=True: adds timing_ms dict as 6th element.
+        (chunks, router_result, data_gaps, data_integrity, conflicted_course_ids, answer)
+        or if return_timing=True: adds timing_ms dict as 7th element.
     """
     from rag.router import deduplicate_chunks
 
@@ -106,16 +99,17 @@ def run_pipeline(
     followup = result.get("retrieved_chunks", [])
     chunks = deduplicate_chunks(anchor + followup) if anchor else followup
 
-    five_tuple = (
+    base = (
         chunks,
         _build_router_result(result),
         result.get("data_gaps", []),
         result.get("data_integrity", True),
         [],  # conflicted_course_ids removed — schedule_filter no longer runs
+        result.get("answer", ""),
     )
     if return_timing:
-        return (*five_tuple, result.get("timing_ms", {}))
-    return five_tuple
+        return (*base, result.get("timing_ms", {}))
+    return base
 
 
 def run_pipeline_eval(
@@ -124,8 +118,7 @@ def run_pipeline_eval(
 ) -> tuple[list[dict], Any, dict]:
     """Run router + retrieval only (no generator). For eval use.
 
-    Same tracing as run_pipeline() — passes trace through CallbackHandler so
-    every graph node (router, retrieval) appears as a child span in Langfuse.
+    Tracing is handled by the OTEL context set in create_trace().
     Session cache is disabled via SESSION_CACHE_ENABLED env var at eval time.
 
     Returns:

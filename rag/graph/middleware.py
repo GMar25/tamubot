@@ -10,8 +10,9 @@ Decorator order on every node must be:
     @error_guard_middleware
     def node_fn(state, registry): ...
 
-Note: @tracing_middleware was removed — LangGraph node spans are now provided
-automatically by the Langfuse CallbackHandler passed to graph.invoke().
+Note: @tracing_middleware was removed — function-level spans are provided by
+@observe decorators on router, retrieval, and generator functions.  OTEL context
+is set by create_trace() so all @observe spans nest under the root trace.
 """
 from __future__ import annotations
 

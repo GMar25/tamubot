@@ -44,7 +44,6 @@ from evals.eval_pipeline import (  # noqa: F401  (TestCase re-exported for calle
     TestCase,
 )
 from rag import run_pipeline_with_memory
-from rag.generator import generate
 from rag.graph.pipeline import run_pipeline
 from rag.observability import (
     EvalInputs,
@@ -136,22 +135,13 @@ def run_probe(
         answer = "".join(answer_tokens)
         generation_elapsed = time.time() - t1
     else:
-        reranked, router_result, data_gaps, data_integrity, _conflicted, _timing = (
+        reranked, router_result, data_gaps, data_integrity, _conflicted, answer, _timing = (
             run_pipeline(query, trace=span, return_timing=True)
         )
-        retrieval_elapsed = time.time() - t0
-
-        t1 = time.time()
-        answer = generate(
-            results=reranked,
-            question=query,
-            function=router_result.function,
-            course_ids=router_result.course_ids or None,
-            intent_type=router_result.intent_type,
-            data_gaps=data_gaps,
-            data_integrity=data_integrity,
-        )
-        generation_elapsed = time.time() - t1
+        total_elapsed = time.time() - t0
+        # run_pipeline includes generation; split timing from timing_ms if available
+        retrieval_elapsed = (total_elapsed - _timing.get("generator_node", 0) / 1000)
+        generation_elapsed = _timing.get("generator_node", 0) / 1000
 
     # Attach final answer to trace and flush
     finalize_trace(trace, output=answer[:500])

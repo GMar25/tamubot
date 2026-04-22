@@ -65,10 +65,14 @@ def test_error_guard_passes_through_successful_result():
     assert result["answer"] == "ok"
 
 
-# ── Pipeline CallbackHandler wiring ─────────────────────────────────────────
+# ── Pipeline tracing wiring ────────────────────────────────────────────────
 
-def test_pipeline_passes_callback_handler_when_trace_provided():
-    """run_pipeline_with_memory passes a CallbackHandler to graph.invoke when trace is given."""
+def test_pipeline_does_not_inject_callbacks():
+    """run_pipeline_with_memory no longer injects a CallbackHandler.
+
+    Tracing is handled by the OTEL context set in create_trace(), so the
+    pipeline should pass config through without adding LangChain callbacks.
+    """
     mock_trace = MagicMock()
     mock_trace.trace_id = "trace-id-123"
 
@@ -94,30 +98,20 @@ def test_pipeline_passes_callback_handler_when_trace_provided():
     original = pipeline_mod._memory_graph
     pipeline_mod._memory_graph = mock_graph
 
-    mock_handler = MagicMock()
-
     try:
-        with patch("rag.graph.pipeline.CallbackHandler") as mock_cb_cls:
-            mock_cb_cls.return_value = mock_handler
-            run_pipeline_with_memory(
-                "hello",
-                trace=mock_trace,
-                thread_config={"configurable": {"thread_id": "t-test"}},
-            )
-            call_args = mock_cb_cls.call_args
-            assert call_args is not None
-            trace_ctx = call_args[1].get("trace_context") or (call_args[0][0] if call_args[0] else None)
-            assert trace_ctx is not None
-            assert trace_ctx["trace_id"] == "trace-id-123"
+        run_pipeline_with_memory(
+            "hello",
+            trace=mock_trace,
+            thread_config={"configurable": {"thread_id": "t-test"}},
+        )
     finally:
         pipeline_mod._memory_graph = original
 
-    # graph.invoke was called with config containing the callback
+    # graph.invoke was called — no callbacks should be injected
     call_kwargs = mock_graph.invoke.call_args
-    config_arg = call_kwargs[1].get("config")
-    assert config_arg is not None
+    config_arg = call_kwargs[1].get("config", {}) if call_kwargs[1] else {}
     callbacks = config_arg.get("callbacks", [])
-    assert mock_handler in callbacks
+    assert callbacks == []
 
 
 def test_pipeline_no_callback_when_trace_is_none():

@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from .config import ObservabilityConfig
 
 logger = logging.getLogger("tamubot.observability")
+
+# Stores the context manager returned by start_as_current_observation
+# so finalize_trace can exit it and detach the OTEL context.
+_active_ctx_managers: dict[int, Any] = {}
 
 # ---------------------------------------------------------------------------
 # Singleton
@@ -52,9 +56,9 @@ def create_trace(
 ) -> tuple[Optional[object], Optional[str]]:
     """Create a Langfuse root observation (trace). Returns (span, trace_id) or (None, None).
 
-    Uses start_observation() which is the v4 SDK's way to create root traces.
-    Tags and session_id are stored in metadata since the v4 SDK does not expose
-    trace-level session_id on start_observation.
+    Uses start_as_current_observation() so the OTEL context is set — any
+    @observe-decorated functions called while this trace is active will
+    automatically nest as child spans instead of creating separate traces.
     """
     lf = get_langfuse()
     if lf is None:
@@ -64,12 +68,18 @@ def create_trace(
             **(obs_config.metadata or {}),
             "session_id": obs_config.session_id,
         }
-        span = lf.start_observation(
+        ctx_manager = lf.start_as_current_observation(
             name=obs_config.trace_name,
             input=query,
             metadata=merged_meta,
+            end_on_exit=False,
         )
+        span = ctx_manager.__enter__()
         trace_id = span.trace_id
+
+        # Store the context manager so finalize_trace can __exit__ it
+        _active_ctx_managers[id(span)] = ctx_manager
+
         # Set tags on the trace via SDK internal API (only public way in v4)
         if obs_config.tags:
             try:
@@ -85,7 +95,7 @@ def create_trace(
 
 
 def finalize_trace(trace, output: str) -> None:
-    """Update trace output, end span, and flush. No-op if trace is None."""
+    """Update trace output, end span, exit OTEL context, and flush. No-op if trace is None."""
     if trace is None:
         return
     try:
@@ -93,6 +103,15 @@ def finalize_trace(trace, output: str) -> None:
         trace.end()
     except Exception:
         pass
+
+    # Exit the context manager to detach the OTEL context
+    ctx_manager = _active_ctx_managers.pop(id(trace), None)
+    if ctx_manager is not None:
+        try:
+            ctx_manager.__exit__(None, None, None)
+        except Exception:
+            pass
+
     lf = get_langfuse()
     if lf is not None:
         try:
