@@ -1,21 +1,20 @@
 """Verify mem0/cache integration: run the same query twice, check for cache hits.
 
 Usage:
-    PYTHONPATH=. python tools/verify_mem0_cache.py
+    python -m tamubot.tools.verify_mem0_cache
 """
 from __future__ import annotations
 
 import time
 
-import config
+from tamubot.core import config
+from tamubot.rag.graph.pipeline import get_current_state, run_pipeline_with_memory
+from tamubot.rag.graph.session import SessionManager
 
 print(f"MEM0_ENABLED           = {config.MEM0_ENABLED}")
 print(f"SESSION_CACHE_ENABLED  = {config.SESSION_CACHE_ENABLED}")
 print(f"USE_TAMU_API           = {config.USE_TAMU_API}")
 print()
-
-from rag.graph.pipeline import run_pipeline_with_memory, get_current_state  # noqa: E402
-from rag.graph.session import SessionManager  # noqa: E402
 
 SESSION_ID = "verify-cache-001"
 session_mgr = SessionManager()
@@ -55,7 +54,7 @@ def run_and_inspect(query: str, label: str) -> dict:
 
 
 def check_answer_cache(state: dict, query: str) -> None:
-    from rag.graph.cache_utils import normalize_query
+    from tamubot.rag.graph.cache_utils import normalize_query
     answer_cache = state.get("answer_cache", {})
     key = normalize_query(query)
     if key in answer_cache:

@@ -1,5 +1,5 @@
 """
-ingestion_pipeline/pipeline_logger.py
+tamubot.ingestion.pipeline_logger
 
 Versioned step logging for the V3 syllabus pipeline.
 

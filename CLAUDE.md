@@ -20,7 +20,7 @@ make test | lint | typecheck | format | probe | probe-full
 
 ## Gotchas
 - **Skills**: discovery uses `~/.claude/skills/<name>/SKILL.md`, not project-level `.claude/skills/*.md`. If a skill doesn't appear, check for broken symlinks in `~/.claude/skills/` — fix from Windows PowerShell, not from inside the container
-- **Config**: always `from tamubot.core import config` — never `os.getenv()` directly. Root `config.py` shim exists for backward compat.
+- **Config**: always `from tamubot.core import config` — never `os.getenv()` directly.
 - **TAMU AI gateway** (`TAMU_API_KEY` set → `USE_TAMU_API=True`): always returns SSE regardless of `stream` param → ALL calls must use `stream=True` + `"".join(chunk.choices[0].delta.content or "" for chunk in stream)`. Base URL: `https://chat-api.tamu.ai/openai` (no `/v1`). Min `max_tokens=4096` or response is empty.
 
 ## Skills — Auto-Engage

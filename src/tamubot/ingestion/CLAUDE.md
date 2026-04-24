@@ -22,7 +22,7 @@ python -m tamubot.ingestion.setup_atlas
 python -m tamubot.ingestion.ingest [--department CSCE] [--dry-run]
 python -m tamubot.ingestion.ingest --crns-file tamu_data/evals/eval_corpus.json  # corpus only
 ```
-Reset catalog crawl: delete `tamu_data/scraper/logs/progress_log.txt`
+Reset catalog crawl: delete `tamu_data/scraper/logs/progress_log.txt` (created at runtime by Scrapy pipeline)
 
 **Always run all steps (0–3) together.** `--step N` is for debugging only — partial runs leave downstream outputs stale.
 

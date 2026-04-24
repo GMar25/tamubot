@@ -2,7 +2,7 @@
 rebuild_csv.py — Rebuild parsing_progress.csv from all JSONs in today's output dir.
 
 Usage:
-    python ingestion_pipeline/rebuild_csv.py
+    python -m tamubot.ingestion.rebuild_csv
 
 Scans OUTPUT_DIR for all *.json files, resolves the source PDF from known raw dirs,
 then rewrites parsing_progress.csv with full link columns (pdf_link, json_link).
@@ -10,10 +10,8 @@ Run manually or call after bulk processing to sync the sheet.
 """
 
 import json
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tamubot.ingestion.process_syllabi import (
     OUTPUT_DIR,
     SYLLABI_DIR,

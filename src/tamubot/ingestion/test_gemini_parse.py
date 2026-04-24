@@ -2,7 +2,7 @@
 Test TAMU API PDF parsing on CSCE + ISEN syllabus PDFs.
 Extracts PDF text with PyMuPDF, then parses via TAMU gateway.
 
-Usage: python ingestion_pipeline/test_gemini_parse.py
+Usage: python -m tamubot.ingestion.test_gemini_parse
 """
 
 import json
@@ -12,7 +12,6 @@ from pathlib import Path
 
 import fitz  # PyMuPDF
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
 from tamubot.core import config
 
 MODEL = config.TAMU_MODEL

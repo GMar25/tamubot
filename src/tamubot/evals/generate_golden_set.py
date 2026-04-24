@@ -289,7 +289,7 @@ def sample_chunks_from_mongo(
     """
     from pymongo import MongoClient
 
-    import config
+    from tamubot.core import config
 
     client = MongoClient(config.MONGODB_URI)
     db = client[config.MONGODB_DB]
@@ -344,7 +344,7 @@ def synthesize_question_for_chunk(
     """
     from google.genai import types
 
-    import config
+    from tamubot.core import config
 
     client = config.get_genai_client()
     course_id = chunk.get("course_id", "the course")
@@ -485,7 +485,7 @@ def upload_to_langfuse(
     """Create (or upsert) a Langfuse dataset and upload all items."""
     import httpx
 
-    import config
+    from tamubot.core import config
 
     if not (config.LANGFUSE_PUBLIC_KEY and config.LANGFUSE_SECRET_KEY):
         print("  [WARN] Langfuse credentials not configured — skipping upload.")

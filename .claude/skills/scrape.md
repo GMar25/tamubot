@@ -36,9 +36,9 @@ Look for: JSON API endpoints, auth cookies set by JS, pagination fields.
 
 ### 2 — Choose approach
 
-**Scrapy** — plain HTML or open API, depth-first crawling. Spider → `tamu_data/scraper/spiders/`.
+**Scrapy** — plain HTML or open API, depth-first crawling. Spider → `src/tamubot/scraper/spiders/`.
 
-**Standalone Playwright** — JS-gated sites (CloudFront WAF, session cookies from JS), `page.pdf()` needed. Script → `tamu_data/scraper/download_<name>.py` + `make scrape-<name>` target.
+**Standalone Playwright** — JS-gated sites (CloudFront WAF, session cookies from JS), `page.pdf()` needed. Script → `src/tamubot/scraper/download_<name>.py` + `make scrape-<name>` target.
 
 ### 3 — Output conventions
 
@@ -58,15 +58,15 @@ Look for: JSON API endpoints, auth cookies set by JS, pagination fields.
   - Fall 2025 CS: `ecd304d6-7795-4f49-a0ee-1d6137884ac7`
   - Spring 2026 CS: `3a9c109e-8e72-4682-966e-b6c754c0596f`
 - Slug: `{term_name.replace(' - ','-').replace(' ','-')}-{SUBJ}-{COURSE}-{SEC}-({CRN})`; URL-encode parens
-- Scraper: `tamu_data/scraper/download_simple_syllabus.py`
+- Scraper: `src/tamubot/scraper/download_simple_syllabus.py`
 
 ## howdyportal.tamu.edu notes
 
 - Open API, Scrapy works. Seed session via GET first, then POST `/api/course-sections`.
-- Spider: `tamu_data/scraper/spiders/class_search_spider.py`
+- Spider: `src/tamubot/scraper/spiders/class_search_spider.py`
 
-## Scrapy flat layout
+## Scrapy layout
 
-- `scrapy.cfg`: `default = settings`
-- `settings.py`: `SPIDER_MODULES = ['spiders']`
-- Spider imports: `from items import X`
+- `scrapy.cfg` at repo root: `default = tamubot.scraper.settings`
+- `settings.py`: `SPIDER_MODULES = ['tamubot.scraper.spiders']`
+- Spider imports: `from tamubot.scraper.items import X`

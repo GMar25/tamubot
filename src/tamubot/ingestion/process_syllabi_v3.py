@@ -1,5 +1,5 @@
 """
-ingestion_pipeline/process_syllabi_v3.py
+tamubot.ingestion.process_syllabi_v3
 
 V3 syllabus pipeline — flat token-based chunking, no header parsing.
 
@@ -11,19 +11,19 @@ Steps:
 
 Usage:
     # Single PDF, new run:
-    python ingestion_pipeline/process_syllabi_v3.py \\
+    python -m tamubot.ingestion.process_syllabi_v3 \\
         --pdf tamu_data/raw/simple_syllabus_20260305/202611_CSCE_670_600_46627.pdf \\
         --new-run
 
     # Pilot run with custom chunk params:
-    python ingestion_pipeline/process_syllabi_v3.py --pilot --chunk-size 400 --overlap 50
-    python ingestion_pipeline/process_syllabi_v3.py --pilot --chunk-size 800 --overlap 150 --new-run
+    python -m tamubot.ingestion.process_syllabi_v3 --pilot --chunk-size 400 --overlap 50
+    python -m tamubot.ingestion.process_syllabi_v3 --pilot --chunk-size 800 --overlap 150 --new-run
 
     # Full department:
-    python ingestion_pipeline/process_syllabi_v3.py --department CSCE --new-run
+    python -m tamubot.ingestion.process_syllabi_v3 --department CSCE --new-run
 
     # Individual step:
-    python ingestion_pipeline/process_syllabi_v3.py --pilot --step 3 --force
+    python -m tamubot.ingestion.process_syllabi_v3 --pilot --step 3 --force
 """
 
 import argparse
@@ -54,8 +54,6 @@ _BP_KEYWORDS = frozenset([
     "honor",         # catches "aggie honor code" variants
     "pronouns",      # catches preferred name/pronouns sections
 ])
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from tamubot.core import config  # noqa: E402
 from tamubot.ingestion.boilerplate_stripper import (  # noqa: E402

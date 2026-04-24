@@ -1,5 +1,5 @@
 """
-ingestion_pipeline/boilerplate_stripper.py
+tamubot.ingestion.boilerplate_stripper
 
 Deterministic pre-stripper for TAMU syllabus PDFs.
 Removes known institutional boilerplate sections BEFORE the LLM sees the text,
@@ -10,8 +10,8 @@ Usage (module):
     cleaned_text, strip_log = strip_pdf(pdf_path)
 
 Batch validation (CLI — run from repo root):
-    python -m ingestion_pipeline.boilerplate_stripper
-    python -m ingestion_pipeline.boilerplate_stripper --input-dirs tamu_data/raw/simple_syllabus_20260305
+    python -m tamubot.ingestion.boilerplate_stripper
+    python -m tamubot.ingestion.boilerplate_stripper --input-dirs tamu_data/raw/simple_syllabus_20260305
 """
 
 import json

@@ -4,8 +4,8 @@ Scans tamu_data/processed/gemini_parsed/ for JSON files with a top-level "error"
 key, re-runs parse_pdf() (with sanitization + collapse logic), and reports recovery.
 
 Usage:
-    python -m ingestion_pipeline.refine_errors
-    python -m ingestion_pipeline.refine_errors --department CSCE
+    python -m tamubot.ingestion.refine_errors
+    python -m tamubot.ingestion.refine_errors --department CSCE
 """
 
 import argparse
@@ -15,7 +15,6 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
 from tamubot.core import config
 from tamubot.ingestion.process_syllabi import (
     DELAY_BETWEEN_CALLS,

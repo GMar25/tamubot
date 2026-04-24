@@ -9,9 +9,9 @@ Features:
   - Summary report at the end
 
 Usage:
-    python ingestion_pipeline/process_syllabi.py
-    python ingestion_pipeline/process_syllabi.py --department CSCE   # only CSCE
-    python ingestion_pipeline/process_syllabi.py --retry-errors      # retry previously failed files
+    python -m tamubot.ingestion.process_syllabi
+    python -m tamubot.ingestion.process_syllabi --department CSCE   # only CSCE
+    python -m tamubot.ingestion.process_syllabi --retry-errors      # retry previously failed files
 """
 
 import argparse
@@ -28,7 +28,6 @@ from dotenv import load_dotenv
 load_dotenv()
 import fitz  # PyMuPDF  # noqa: E402
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
 from tamubot.core import config  # noqa: E402
 from tamubot.ingestion.boilerplate_stripper import strip_pdf  # noqa: E402
 

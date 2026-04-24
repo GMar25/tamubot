@@ -1,9 +1,9 @@
 """Ingest Gemini-parsed JSON files into MongoDB Atlas.
 
 Usage:
-    python -m ingestion_pipeline.ingest                          # ingest all
-    python -m ingestion_pipeline.ingest --department CSCE         # single department
-    python -m ingestion_pipeline.ingest --dry-run                 # preview without writing
+    python -m tamubot.ingestion.ingest                          # ingest all
+    python -m tamubot.ingestion.ingest --department CSCE         # single department
+    python -m tamubot.ingestion.ingest --dry-run                 # preview without writing
 
 Requires MONGODB_URI and VOYAGE_API_KEY in .env.
 """

@@ -585,7 +585,7 @@ def main() -> None:
         try:
             from pymongo import MongoClient
 
-            import config
+            from tamubot.core import config
             from tamubot.rag.tools.mongo import CHUNKS_COLLECTION
             _client = MongoClient(config.MONGODB_URI)
             _db = _client[config.MONGODB_DB]

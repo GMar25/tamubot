@@ -10,13 +10,13 @@ run:
 
 # --- Data Pipeline ---
 scrape-catalog:
-	cd tamu_data/scraper && scrapy crawl catalog
+	scrapy crawl catalog
 
 scrape-classes:
-	cd tamu_data/scraper && scrapy crawl class_search
+	scrapy crawl class_search
 
 scrape-simple-syllabus:
-	python tamu_data/scraper/download_simple_syllabus.py
+	python -m tamubot.scraper.download_simple_syllabus
 
 setup-atlas:
 	python -m tamubot.ingestion.setup_atlas
@@ -41,10 +41,10 @@ typecheck:
 	mypy src/tamubot/ --ignore-missing-imports
 
 lint:
-	ruff check src/tamubot/ config.py
+	ruff check src/tamubot/
 
 format:
-	ruff format src/tamubot/ config.py
+	ruff format src/tamubot/
 
 probe:
 	python -m tamubot.evals.run_probe --suite smoke

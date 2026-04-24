@@ -1,5 +1,5 @@
 """
-ingestion_pipeline/chunk_syllabi.py
+tamubot.ingestion.chunk_syllabi
 
 Standalone re-chunker for v3 syllabus pipeline.
 
@@ -9,11 +9,12 @@ chunks them with configurable size/overlap, and writes JSON to a date-stamped ou
 No LLM calls. Output is for experimentation and inspection only.
 
 Usage:
-    python ingestion_pipeline/chunk_syllabi.py --chunk-size 300 --overlap 50
-    python ingestion_pipeline/chunk_syllabi.py --chunk-size 300 --overlap 50 --files 10
-    python ingestion_pipeline/chunk_syllabi.py --chunk-size 300 --overlap 50 --all
-    python ingestion_pipeline/chunk_syllabi.py --chunk-size 500 --overlap 75 --all --force
-    python ingestion_pipeline/chunk_syllabi.py --chunk-size 300 --overlap 50 --crns-file tamu_data/evals/eval_corpus.json --all
+    python -m tamubot.ingestion.chunk_syllabi --chunk-size 300 --overlap 50
+    python -m tamubot.ingestion.chunk_syllabi --chunk-size 300 --overlap 50 --files 10
+    python -m tamubot.ingestion.chunk_syllabi --chunk-size 300 --overlap 50 --all
+    python -m tamubot.ingestion.chunk_syllabi --chunk-size 500 --overlap 75 --all --force
+    python -m tamubot.ingestion.chunk_syllabi --chunk-size 300 --overlap 50 \
+        --crns-file tamu_data/evals/eval_corpus.json --all
 """
 
 import argparse
@@ -24,10 +25,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from tamubot.ingestion.boilerplate_stripper import annotated_to_clean_markdown  # noqa: E402
-from tamubot.ingestion.chunker_v3 import _tokens_approx, chunk_text  # noqa: E402
+from tamubot.ingestion.boilerplate_stripper import annotated_to_clean_markdown
+from tamubot.ingestion.chunker_v3 import _tokens_approx, chunk_text
 
 STEP2_ROOT = Path("tamu_data/processed/v3_step2_boilerplate")
 OUTPUT_BASE = Path("tamu_data/processed")

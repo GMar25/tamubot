@@ -10,9 +10,7 @@ v4 = [
     "haystack-ai>=2.25.2,<3.0.0",
     "mem0ai",
 ]
-spike = [
-    "lightrag-hku",
-]
+spike = []
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -39,3 +37,4 @@ select = ["E", "F", "I"]
 "src/tamubot/ingestion/process_syllabi_v3.py" = ["E501"]
 "src/tamubot/ingestion/legacy/standardize_syllabi.py" = ["E501"]
 "src/tamubot/ingestion/test_gemini_parse.py" = ["E501"]
+"src/tamubot/tools/*.py" = ["E501"]

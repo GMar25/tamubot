@@ -29,7 +29,7 @@ def get_critic_llm():
         from langchain_openai import ChatOpenAI
         from ragas.llms import LangchainLLMWrapper
 
-        import config
+        from tamubot.core import config
 
         _critic_llm = LangchainLLMWrapper(
             ChatOpenAI(
@@ -50,7 +50,7 @@ def get_critic_embeddings():
         from langchain_core.embeddings import Embeddings
         from ragas.embeddings import LangchainEmbeddingsWrapper
 
-        import config
+        from tamubot.core import config
 
         class _VoyageEmbeddings(Embeddings):
             def embed_documents(self, texts: list[str]) -> list[list[float]]:

@@ -443,7 +443,6 @@ def refine(
         question = item.get("question", "")
         expected_fn = item.get("expected_function", "")
         crn = str(item.get("source_crn", "") or "")
-        course_id = item.get("source_course_id", "")
 
         print(f"[{i:2d}/{len(items)}] {question[:70]}")
         print(f"         fn={expected_fn}  crn={crn}  cat={item.get('source_category', '')}")

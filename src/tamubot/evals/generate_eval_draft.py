@@ -46,7 +46,7 @@ def sample_corpus_chunks(n_total: int, corpus_crns: list[str], department: str) 
     """Sample chunks filtered to corpus CRNs only, weighted by CATEGORY_WEIGHTS."""
     from pymongo import MongoClient
 
-    import config
+    from tamubot.core import config
 
     client = MongoClient(config.MONGODB_URI)
     db = client[config.MONGODB_DB]

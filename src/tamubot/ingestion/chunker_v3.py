@@ -1,5 +1,5 @@
 """
-ingestion_pipeline/chunker_v3.py
+tamubot.ingestion.chunker_v3
 
 Flat token-based chunker for the V3 syllabus pipeline.
 
