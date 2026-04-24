@@ -13,7 +13,7 @@ from pathlib import Path
 import fitz  # PyMuPDF
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import config
+from tamubot.core import config
 
 MODEL = config.TAMU_MODEL
 

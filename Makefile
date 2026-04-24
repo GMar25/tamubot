@@ -6,7 +6,7 @@
 # --- App ---
 run:
 	@echo "Starting TamuBot..."
-	@streamlit run app.py --server.headless true
+	@streamlit run src/tamubot/app/streamlit.py --server.headless true
 
 # --- Data Pipeline ---
 scrape-catalog:
@@ -38,46 +38,46 @@ test:
 	pytest tests/ -v
 
 typecheck:
-	mypy src/tamubot/ evals/ --ignore-missing-imports
+	mypy src/tamubot/ --ignore-missing-imports
 
 lint:
-	ruff check src/tamubot/ evals/ app.py config.py
+	ruff check src/tamubot/ config.py
 
 format:
-	ruff format src/tamubot/ evals/ app.py config.py
+	ruff format src/tamubot/ config.py
 
 probe:
-	python evals/run_probe.py --suite smoke
+	python -m tamubot.evals.run_probe --suite smoke
 
 probe-v3:
-	USE_V4_PIPELINE=false python evals/run_probe.py --suite smoke
+	USE_V4_PIPELINE=false python -m tamubot.evals.run_probe --suite smoke
 
 probe-full:
-	python evals/run_probe.py --suite all
+	python -m tamubot.evals.run_probe --suite all
 
 test-v4:
 	pytest tests/test_v4_*.py -v
 
 probe-v4:
-	python evals/run_probe.py --suite smoke
+	python -m tamubot.evals.run_probe --suite smoke
 
 # --- Benchmarking ---
 eval-draft:
-	python evals/generate_eval_draft.py --n 60
+	python -m tamubot.evals.generate_eval_draft --n 60
 
 import-draft:
-	python evals/import_eval_draft.py --draft $(DRAFT) --tag $(or $(TAG),v1)
+	python -m tamubot.evals.import_eval_draft --draft $(DRAFT) --tag $(or $(TAG),v1)
 
 bench:
-	python evals/run_benchmark.py --golden-set $(GOLDEN) --experiment-name $(EXP) \
+	python -m tamubot.evals.run_benchmark --golden-set $(GOLDEN) --experiment-name $(EXP) \
 		$(if $(CHUNKS_COL),--chunks-collection $(CHUNKS_COL),)
 
 bench-ragas:
-	python evals/run_benchmark.py --golden-set $(GOLDEN) --experiment-name $(EXP) --ragas \
+	python -m tamubot.evals.run_benchmark --golden-set $(GOLDEN) --experiment-name $(EXP) --ragas \
 		$(if $(CHUNKS_COL),--chunks-collection $(CHUNKS_COL),)
 
 eval-chunking:
-	SESSION_CACHE_ENABLED=false python evals/eval_chunking.py \
+	SESSION_CACHE_ENABLED=false python -m tamubot.evals.eval_chunking \
 		--golden-set $(GOLDEN) \
 		--experiment $(EXP) \
 		$(if $(RAGAS),--ragas,) \

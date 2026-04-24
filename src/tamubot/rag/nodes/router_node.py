@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-import config
+from tamubot.core import config
 from tamubot.rag.graph.cache_utils import normalize_query
 from tamubot.rag.graph.middleware import error_guard_middleware, timing_middleware
 from tamubot.rag.state.pipeline_state import PipelineState

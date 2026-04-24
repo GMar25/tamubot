@@ -64,7 +64,7 @@ def test_router_cache_hit_skips_llm():
     query = "CSCE 221 grading?"
     state = _base_router_state(router_cache={normalize_query(query): cached_entry})
 
-    with patch("config.SESSION_CACHE_ENABLED", True), \
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", True), \
          patch("tamubot.rag.router.classify_query") as mock_classify:
         result = router_node(state)
 
@@ -82,7 +82,7 @@ def test_router_cache_miss_calls_llm_and_writes_cache():
     rr = _make_router_result()
     state = _base_router_state(router_cache={})
 
-    with patch("config.SESSION_CACHE_ENABLED", True), \
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", True), \
          patch("tamubot.rag.router.classify_query", return_value=rr) as mock_classify:
         result = router_node(state)
 
@@ -104,7 +104,7 @@ def test_router_cache_disabled_does_not_use_cache():
     # Pre-populate cache — should be ignored
     state = _base_router_state(router_cache={"csce 221 grading": {"function": "out_of_scope", "course_ids": []}})
 
-    with patch("config.SESSION_CACHE_ENABLED", False), \
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", False), \
          patch("tamubot.rag.router.classify_query", return_value=rr) as mock_classify:
         result = router_node(state)
 
@@ -145,7 +145,7 @@ def test_retrieval_cache_hit_skips_retrieval_hybrid():
     )
     state = _base_retrieval_state(retrieval_cache={cache_key: fake_chunks})
 
-    with patch("config.SESSION_CACHE_ENABLED", True), \
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", True), \
          patch("tamubot.rag.tools.mongo.hybrid_search") as mock_hs, \
          patch("tamubot.rag.tools.voyage.rerank") as mock_rr:
         result = retrieval_node(state)
@@ -170,7 +170,7 @@ def test_retrieval_cache_hit_skips_retrieval_semantic():
         retrieval_cache={cache_key: fake_chunks},
     )
 
-    with patch("config.SESSION_CACHE_ENABLED", True), \
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", True), \
          patch("tamubot.rag.tools.mongo.semantic_search") as mock_ss, \
          patch("tamubot.rag.tools.voyage.rerank") as mock_rr:
         result = retrieval_node(state)
@@ -187,7 +187,7 @@ def test_retrieval_cache_miss_calls_retrieval_and_writes_cache():
     chunks = _default_chunks()
     state = _base_retrieval_state(retrieval_cache={})
 
-    with patch("config.SESSION_CACHE_ENABLED", True), \
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", True), \
          patch("tamubot.rag.tools.mongo.hybrid_search", return_value=chunks) as mock_hs, \
          patch("tamubot.rag.tools.voyage.rerank", side_effect=lambda q, c, top_k, **kwargs: c):
         result = retrieval_node(state)
@@ -239,8 +239,8 @@ def test_history_update_writes_answer_cache():
 
     state = _base_update_state()
 
-    with patch("config.SESSION_CACHE_ENABLED", True), \
-         patch("config.MEM0_ENABLED", False):
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", True), \
+         patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_update_node(state)
 
     cache = result.get("answer_cache", {})
@@ -257,8 +257,8 @@ def test_history_update_answer_cache_merges_with_existing():
     existing = {normalize_query("old question"): "old answer"}
     state = _base_update_state(answer_cache=existing)
 
-    with patch("config.SESSION_CACHE_ENABLED", True), \
-         patch("config.MEM0_ENABLED", False):
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", True), \
+         patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_update_node(state)
 
     cache = result.get("answer_cache", {})
@@ -272,8 +272,8 @@ def test_history_update_no_answer_cache_when_disabled():
 
     state = _base_update_state()
 
-    with patch("config.SESSION_CACHE_ENABLED", False), \
-         patch("config.MEM0_ENABLED", False):
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", False), \
+         patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_update_node(state)
 
     cache = result.get("answer_cache", {})
@@ -286,8 +286,8 @@ def test_history_update_no_answer_cache_when_query_empty():
 
     state = _base_update_state(query="", answer="some answer")
 
-    with patch("config.SESSION_CACHE_ENABLED", True), \
-         patch("config.MEM0_ENABLED", False):
+    with patch("tamubot.core.config.SESSION_CACHE_ENABLED", True), \
+         patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_update_node(state)
 
     assert len(result.get("answer_cache", {})) == 0
@@ -315,7 +315,7 @@ def test_history_inject_skips_mem0_when_no_session_id():
         "timing_ms": {},
     }
 
-    with patch("config.MEM0_ENABLED", True), \
+    with patch("tamubot.core.config.MEM0_ENABLED", True), \
          patch("tamubot.rag.tools.mem0.get_mem0_manager", return_value=mock_manager):
         history_inject_node(state)
 

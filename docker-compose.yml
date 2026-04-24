@@ -1,7 +1,7 @@
 services:
   dev:
     build: .
-    command: streamlit run app.py --server.port 8501 --server.headless true
+    command: streamlit run src/tamubot/app/streamlit.py --server.port 8501 --server.headless true
     volumes:
       - .:/workspace
       - C:/Users/iredl/.claude:/home/claude/.claude

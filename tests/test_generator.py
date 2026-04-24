@@ -7,7 +7,7 @@ Tests cover:
   - Thinking token configuration (config.py)
 """
 
-import config
+from tamubot.core import config
 from tamubot.rag.gates import validate_citations_gate1
 from tamubot.rag.prompts import _FUNCTION_TEMPERATURES
 from tamubot.rag.tools.context import format_context_xml

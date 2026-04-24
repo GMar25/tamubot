@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 def test_golden_set_load_returns_all_items(tmp_path):
     """Reads every non-empty row from an xlsx golden set."""
-    from evals.golden_set import load, save
+    from tamubot.evals.golden_set import load, save
     data = [
         {"id": 1, "question": "What is grading?", "reference_answer": "A/B/C",
          "expected_function": "hybrid_course", "human_notes": None},
@@ -23,7 +23,7 @@ def test_golden_set_load_returns_all_items(tmp_path):
 
 def test_golden_set_load_skips_empty_question_rows(tmp_path):
     """Ignores rows with empty question in xlsx golden set."""
-    from evals.golden_set import load, save
+    from tamubot.evals.golden_set import load, save
     data = [
         {"id": 1, "question": "Q1", "reference_answer": "A1",
          "expected_function": "hybrid_course", "human_notes": None},
@@ -45,7 +45,7 @@ def test_compute_embedding_metrics_all_relevant():
     chunks = [{"content": "abc" * 10}, {"content": "def" * 20}]
     labels = [True, True]
 
-    from evals.eval_chunking import compute_embedding_metrics
+    from tamubot.evals.eval_chunking import compute_embedding_metrics
     result = compute_embedding_metrics("query", chunks, _labels=labels)
 
     assert result["precision_at_k"] == 1.0
@@ -58,7 +58,7 @@ def test_compute_embedding_metrics_none_relevant():
     chunks = [{"content": "abc"}, {"content": "def"}]
     labels = [False, False]
 
-    from evals.eval_chunking import compute_embedding_metrics
+    from tamubot.evals.eval_chunking import compute_embedding_metrics
     result = compute_embedding_metrics("query", chunks, _labels=labels)
 
     assert result["precision_at_k"] == 0.0
@@ -70,7 +70,7 @@ def test_compute_embedding_metrics_partial_relevance():
     chunks = [{"content": "a" * 100}, {"content": "b" * 100}]
     labels = [True, False]
 
-    from evals.eval_chunking import compute_embedding_metrics
+    from tamubot.evals.eval_chunking import compute_embedding_metrics
     result = compute_embedding_metrics("query", chunks, _labels=labels)
 
     assert result["precision_at_k"] == 0.5
@@ -80,7 +80,7 @@ def test_compute_embedding_metrics_partial_relevance():
 
 def test_compute_embedding_metrics_empty_chunks():
     """Returns zeros when chunk list is empty."""
-    from evals.eval_chunking import compute_embedding_metrics
+    from tamubot.evals.eval_chunking import compute_embedding_metrics
     result = compute_embedding_metrics("query", [], _labels=[])
 
     assert result["precision_at_k"] == 0.0
@@ -101,7 +101,7 @@ def test_compute_aggregates_means():
          "recall_at_k": None, "f1_at_k": None, "context_precision": None},
     ]
 
-    from evals.eval_chunking import _compute_aggregates
+    from tamubot.evals.eval_chunking import _compute_aggregates
     agg = _compute_aggregates(results)
 
     assert agg["avg_precision_at_k"] == 0.75
@@ -113,7 +113,7 @@ def test_compute_aggregates_means():
 
 def test_compute_f1():
     """F1 is harmonic mean of precision and recall."""
-    from evals.eval_chunking import _compute_f1
+    from tamubot.evals.eval_chunking import _compute_f1
     assert _compute_f1(1.0, 1.0) == 1.0
     assert _compute_f1(0.0, 1.0) == 0.0
     assert _compute_f1(0.5, 0.5) == 0.5
@@ -137,9 +137,9 @@ def test_run_one_query_skips_out_of_scope():
     """Returns None when pipeline reports no retrieval required."""
     mock_rr = _make_mock_router_result(function="out_of_scope", course_ids=[], requires_retrieval=False)
 
-    with patch("evals.eval_chunking.run_pipeline_eval",
+    with patch("tamubot.evals.eval_chunking.run_pipeline_eval",
                return_value=([], mock_rr, {})):
-        from evals.eval_chunking import _run_one_query
+        from tamubot.evals.eval_chunking import _run_one_query
         result = _run_one_query("query", "ref", None, 0.35, False, 1, 1)
 
     assert result is None
@@ -150,11 +150,11 @@ def test_run_one_query_applies_top_k_slice():
     mock_rr = _make_mock_router_result()
     chunks = [{"content": f"chunk{i}"} for i in range(10)]
 
-    with patch("evals.eval_chunking.run_pipeline_eval",
+    with patch("tamubot.evals.eval_chunking.run_pipeline_eval",
                return_value=(chunks, mock_rr, {})), \
-         patch("evals.eval_chunking.compute_embedding_metrics",
+         patch("tamubot.evals.eval_chunking.compute_embedding_metrics",
                return_value={"precision_at_k": 0.5, "hit_rate_at_k": 1.0, "retrieved_tokens": 20}) as mock_emb:
-        from evals.eval_chunking import _run_one_query
+        from tamubot.evals.eval_chunking import _run_one_query
         _run_one_query("query", "ref", 3, 0.35, False, 1, 1)
 
     # Only 3 chunks passed to embedding metrics
@@ -174,8 +174,8 @@ def test_run_eval_skips_item_without_reference_when_ragas():
     """Items without reference_answer are skipped when --ragas is on."""
     items = [{"question": "Q1", "reference_answer": ""}]
 
-    with patch("evals.eval_chunking.run_pipeline_eval") as mock_pipe:
-        from evals.eval_chunking import run_eval
+    with patch("tamubot.evals.eval_chunking.run_pipeline_eval") as mock_pipe:
+        from tamubot.evals.eval_chunking import run_eval
         results, _, _ = run_eval(items, "test", "test_ds", None, 0.85, ragas_enabled=True, lf=None)
 
     mock_pipe.assert_not_called()
@@ -186,8 +186,8 @@ def test_run_eval_skips_item_without_question():
     """Items missing 'question' key are skipped."""
     items = [{"reference_answer": "ref"}]
 
-    with patch("evals.eval_chunking.run_pipeline_eval") as mock_pipe:
-        from evals.eval_chunking import run_eval
+    with patch("tamubot.evals.eval_chunking.run_pipeline_eval") as mock_pipe:
+        from tamubot.evals.eval_chunking import run_eval
         results, _, _ = run_eval(items, "test", "test_ds", None, 0.85, ragas_enabled=False, lf=None)
 
     mock_pipe.assert_not_called()
@@ -199,10 +199,10 @@ def test_run_eval_returns_embedding_metrics_only():
     mock_rr = _make_mock_router_result()
     chunks = [{"content": "Grading: A=90+" * 10}]
 
-    with patch("evals.eval_chunking.run_pipeline_eval", return_value=(chunks, mock_rr, {})), \
-         patch("evals.eval_chunking.compute_embedding_metrics",
+    with patch("tamubot.evals.eval_chunking.run_pipeline_eval", return_value=(chunks, mock_rr, {})), \
+         patch("tamubot.evals.eval_chunking.compute_embedding_metrics",
                return_value={"precision_at_k": 1.0, "hit_rate_at_k": 1.0, "retrieved_tokens": 30}):
-        from evals.eval_chunking import run_eval
+        from tamubot.evals.eval_chunking import run_eval
         results, run_name, _ = run_eval(
             [_make_item()], "test_exp", "test_ds", None, 0.85, ragas_enabled=False, lf=None
         )
@@ -221,12 +221,12 @@ def test_run_eval_logs_trace_and_scores_to_langfuse():
     mock_trace = MagicMock()
     mock_trace.id = "trace-abc"
 
-    with patch("evals.eval_chunking.upsert_langfuse_dataset") as mock_upsert, \
-         patch("evals.eval_chunking.create_trace",
+    with patch("tamubot.evals.eval_chunking.upsert_langfuse_dataset") as mock_upsert, \
+         patch("tamubot.evals.eval_chunking.create_trace",
                return_value=(mock_trace, "trace-abc")) as mock_ct, \
-         patch("evals.eval_chunking.run_pipeline_eval",
+         patch("tamubot.evals.eval_chunking.run_pipeline_eval",
                return_value=([{"content": "x", "score": 0.9}], mock_rr, {})):
-        from evals.eval_chunking import run_eval
+        from tamubot.evals.eval_chunking import run_eval
         results, run_name, _ = run_eval(
             [_make_item()], "exp", "test_ds", None, 0.85, ragas_enabled=False, lf=mock_lf
         )

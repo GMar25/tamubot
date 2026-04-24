@@ -8,7 +8,7 @@ from tamubot.rag.tools.mem0 import Mem0Manager
 def test_mem0_manager_add_turn_calls_cloud_api():
     """add_turn should call MemoryClient.add with correct user_id."""
     with patch("tamubot.rag.tools.mem0.MemoryClient") as MockClient, \
-         patch("config.MEM0_API_KEY", "test-api-key"):
+         patch("tamubot.core.config.MEM0_API_KEY", "test-api-key"):
         mock_instance = MagicMock()
         MockClient.return_value = mock_instance
 
@@ -29,7 +29,7 @@ def test_mem0_manager_add_turn_calls_cloud_api():
 def test_mem0_manager_search_context_returns_facts():
     """search_context should format MemoryClient.search results as bullet list."""
     with patch("tamubot.rag.tools.mem0.MemoryClient") as MockClient, \
-         patch("config.MEM0_API_KEY", "test-api-key"):
+         patch("tamubot.core.config.MEM0_API_KEY", "test-api-key"):
         mock_instance = MagicMock()
         mock_instance.search.return_value = [
             {"memory": "user is a CS senior"},
@@ -49,7 +49,7 @@ def test_mem0_manager_search_context_returns_facts():
 def test_mem0_manager_search_context_empty_results():
     """search_context should return '' when MemoryClient.search returns []."""
     with patch("tamubot.rag.tools.mem0.MemoryClient") as MockClient, \
-         patch("config.MEM0_API_KEY", "test-api-key"):
+         patch("tamubot.core.config.MEM0_API_KEY", "test-api-key"):
         mock_instance = MagicMock()
         mock_instance.search.return_value = []
         MockClient.return_value = mock_instance
@@ -63,7 +63,7 @@ def test_mem0_manager_search_context_empty_results():
 def test_mem0_manager_search_context_exception_swallowed():
     """search_context should return '' (not raise) when MemoryClient.search raises."""
     with patch("tamubot.rag.tools.mem0.MemoryClient") as MockClient, \
-         patch("config.MEM0_API_KEY", "test-api-key"):
+         patch("tamubot.core.config.MEM0_API_KEY", "test-api-key"):
         mock_instance = MagicMock()
         mock_instance.search.side_effect = Exception("timeout")
         MockClient.return_value = mock_instance
@@ -76,7 +76,7 @@ def test_mem0_manager_search_context_exception_swallowed():
 
 def test_mem0_manager_add_turn_async_fires_thread():
     with patch("tamubot.rag.tools.mem0.MemoryClient") as MockClient, \
-         patch("config.MEM0_API_KEY", "test-api-key"):
+         patch("tamubot.core.config.MEM0_API_KEY", "test-api-key"):
         mock_instance = MagicMock()
         MockClient.return_value = mock_instance
 

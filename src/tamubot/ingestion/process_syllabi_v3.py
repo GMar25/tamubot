@@ -57,7 +57,7 @@ _BP_KEYWORDS = frozenset([
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import config  # noqa: E402
+from tamubot.core import config  # noqa: E402
 from tamubot.ingestion.boilerplate_stripper import (  # noqa: E402
     annotated_to_clean_markdown,
     pdf_to_annotated_markdown,

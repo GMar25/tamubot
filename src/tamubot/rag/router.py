@@ -15,7 +15,7 @@ from typing import Optional
 from langfuse import get_client as _lf_get_client
 from langfuse import observe
 
-import config
+from tamubot.core import config
 from tamubot.rag.prompts import ROUTER_PROMPT
 from tamubot.rag.tools.llm import call_llm
 

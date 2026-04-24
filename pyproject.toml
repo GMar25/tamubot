@@ -34,7 +34,7 @@ line-length = 120
 select = ["E", "F", "I"]
 
 [tool.ruff.lint.per-file-ignores]
-"evals/*.py" = ["E402", "E501"]
+"src/tamubot/evals/*.py" = ["E402", "E501"]
 "src/tamubot/ingestion/process_syllabi.py" = ["E501"]
 "src/tamubot/ingestion/process_syllabi_v3.py" = ["E501"]
 "src/tamubot/ingestion/legacy/standardize_syllabi.py" = ["E501"]
