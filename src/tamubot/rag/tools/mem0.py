@@ -9,7 +9,7 @@ import logging
 import threading
 from typing import Optional
 
-import config
+from tamubot.core import config
 
 logger = logging.getLogger(__name__)
 

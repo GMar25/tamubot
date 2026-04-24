@@ -5,7 +5,7 @@ rerank_k from compute_dynamic_k entirely.
 """
 from unittest.mock import call, patch
 
-import config
+from tamubot.core import config
 
 
 # ---------------------------------------------------------------------------

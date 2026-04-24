@@ -9,7 +9,7 @@ from __future__ import annotations
 from langfuse import get_client as _lf_get_client
 from langfuse import observe
 
-import config
+from tamubot.core import config
 from tamubot.rag.graph.middleware import error_guard_middleware, timing_middleware
 from tamubot.rag.prompts import OUT_OF_SCOPE_SYSTEM
 from tamubot.rag.state.pipeline_state import PipelineState

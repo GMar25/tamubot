@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 import streamlit as st
 
-import config
+from tamubot.core import config
 from tamubot.rag.observability import create_trace, finalize_trace, prod_config
 
 logging.basicConfig(level=logging.INFO)

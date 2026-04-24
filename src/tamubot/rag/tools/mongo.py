@@ -19,7 +19,7 @@ from typing import Any, Optional
 from langfuse import observe
 from pymongo import MongoClient
 
-import config
+from tamubot.core import config
 
 CHUNKS_COLLECTION = os.getenv("CHUNKS_COLLECTION", "chunks_v3")
 COURSES_COLLECTION = os.getenv("COURSES_COLLECTION", "courses_v3")

@@ -15,7 +15,7 @@ from typing import Iterator, NamedTuple
 
 from google.genai import types
 
-import config
+from tamubot.core import config
 
 
 def _count_tokens_approx(text: str) -> int:

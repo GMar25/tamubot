@@ -53,8 +53,8 @@ def test_history_update_appends_turn():
         "timing_ms": {},
     }
     with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
-         patch("config.SESSION_CACHE_ENABLED", False), \
-         patch("config.MEM0_ENABLED", False):
+         patch("tamubot.core.config.SESSION_CACHE_ENABLED", False), \
+         patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_update_node(state)
     history = result.get("history", [])
     assert len(history) == 2  # user + assistant
@@ -73,8 +73,8 @@ def test_history_update_increments_turn_number():
         "node_trace": [], "timing_ms": {},
     }
     with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
-         patch("config.SESSION_CACHE_ENABLED", False), \
-         patch("config.MEM0_ENABLED", False):
+         patch("tamubot.core.config.SESSION_CACHE_ENABLED", False), \
+         patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_update_node(state)
     assert result["turn_number"] == 4
 
@@ -103,8 +103,8 @@ def test_history_update_compression_triggered_at_max_turns():
         "timing_ms": {},
     }
     with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
-         patch("config.SESSION_CACHE_ENABLED", False), \
-         patch("config.MEM0_ENABLED", False):
+         patch("tamubot.core.config.SESSION_CACHE_ENABLED", False), \
+         patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_update_node(state)
     # History should be compressed/truncated
     assert len(result["history"]) <= (config.V4_MAX_HISTORY_TURNS * 2) + 2
@@ -122,8 +122,8 @@ def test_history_update_clears_non_checkpointable_fields():
         "node_trace": [], "timing_ms": {},
     }
     with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
-         patch("config.SESSION_CACHE_ENABLED", False), \
-         patch("config.MEM0_ENABLED", False):
+         patch("tamubot.core.config.SESSION_CACHE_ENABLED", False), \
+         patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_update_node(state)
     assert result.get("answer_stream") is None
 
@@ -216,8 +216,8 @@ def test_history_update_stores_router_result_summary():
         "timing_ms": {},
     }
     with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
-         patch("config.SESSION_CACHE_ENABLED", False), \
-         patch("config.MEM0_ENABLED", False):
+         patch("tamubot.core.config.SESSION_CACHE_ENABLED", False), \
+         patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_update_node(state)
     history = result["history"]
     assistant_msg = next(m for m in history if m["role"] == "assistant")
@@ -292,9 +292,9 @@ def test_history_update_node_updates_summary_on_second_turn():
     mock_llm_result.text = "User asked about available courses. Bot listed CS options."
 
     with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=mock_llm_result) as mock_llm, \
-         patch("config.MEM0_ENABLED", True), \
-         patch("config.SESSION_CACHE_ENABLED", False), \
-         patch("config.MEM0_API_KEY", "test-key"), \
+         patch("tamubot.core.config.MEM0_ENABLED", True), \
+         patch("tamubot.core.config.SESSION_CACHE_ENABLED", False), \
+         patch("tamubot.core.config.MEM0_API_KEY", "test-key"), \
          patch("tamubot.rag.nodes.history_update_node.Mem0Manager") as mock_mem0:
         mock_mem0.return_value.add_turn_async = MagicMock()
         result = history_update_node(state)
@@ -327,9 +327,9 @@ def test_history_update_node_updates_summary_on_first_turn():
     mock_llm_result.text = "User greeted the bot."
 
     with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=mock_llm_result) as mock_llm, \
-         patch("config.MEM0_ENABLED", True), \
-         patch("config.SESSION_CACHE_ENABLED", False), \
-         patch("config.MEM0_API_KEY", "test-key"), \
+         patch("tamubot.core.config.MEM0_ENABLED", True), \
+         patch("tamubot.core.config.SESSION_CACHE_ENABLED", False), \
+         patch("tamubot.core.config.MEM0_API_KEY", "test-key"), \
          patch("tamubot.rag.nodes.history_update_node.Mem0Manager") as mock_mem0:
         mock_mem0.return_value.add_turn_async = MagicMock()
         result = history_update_node(state)
@@ -362,8 +362,8 @@ def test_history_update_node_updates_summary_even_when_mem0_disabled():
     mock_llm_result.text = "User greeted the bot."
 
     with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=mock_llm_result) as mock_llm, \
-         patch("config.MEM0_ENABLED", False), \
-         patch("config.SESSION_CACHE_ENABLED", False):
+         patch("tamubot.core.config.MEM0_ENABLED", False), \
+         patch("tamubot.core.config.SESSION_CACHE_ENABLED", False):
         result = history_update_node(state)
 
     mock_llm.assert_called_once()
@@ -397,8 +397,8 @@ def test_history_inject_node_hybrid_context():
     mock_manager.search_context.return_value = "- user is a CS senior\n- prefers afternoon classes"
 
     with patch("tamubot.rag.nodes.history_inject_node.Mem0Manager", return_value=mock_manager), \
-         patch("config.MEM0_ENABLED", True), \
-         patch("config.MEM0_API_KEY", "test-key"):
+         patch("tamubot.core.config.MEM0_ENABLED", True), \
+         patch("tamubot.core.config.MEM0_API_KEY", "test-key"):
         result = history_inject_node(state)
 
     ctx = result["history_context"]
@@ -429,7 +429,7 @@ def test_history_inject_node_no_mem0_falls_back_to_gist_and_flow():
         "node_trace": [],
     }
 
-    with patch("config.MEM0_ENABLED", False):
+    with patch("tamubot.core.config.MEM0_ENABLED", False):
         result = history_inject_node(state)
 
     ctx = result["history_context"]

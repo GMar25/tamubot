@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import config
+from tamubot.core import config
 from tamubot.ingestion.process_syllabi import (
     DELAY_BETWEEN_CALLS,
     LOG_DIR,

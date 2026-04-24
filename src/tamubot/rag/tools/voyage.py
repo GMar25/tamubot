@@ -17,7 +17,7 @@ from typing import Optional
 import voyageai
 from langfuse import observe
 
-import config
+from tamubot.core import config
 
 EMBEDDING_MODEL = "voyage-3"
 RERANK_MODEL = config.VOYAGE_RERANK_MODEL

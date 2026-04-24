@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-import config
+from tamubot.core import config
 
 
 def make_checkpointer(backend: Optional[str] = None):

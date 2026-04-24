@@ -29,7 +29,7 @@ load_dotenv()
 import fitz  # PyMuPDF  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import config  # noqa: E402
+from tamubot.core import config  # noqa: E402
 from tamubot.ingestion.boilerplate_stripper import strip_pdf  # noqa: E402
 
 # ── Config ────────────────────────────────────────────────────────────────────

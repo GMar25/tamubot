@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 
-import config
+from tamubot.core import config
 from tamubot.rag.graph.middleware import error_guard_middleware, timing_middleware
 from tamubot.rag.state.pipeline_state import ConversationState
 from tamubot.rag.tools.mem0 import Mem0Manager

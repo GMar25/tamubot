@@ -8,7 +8,7 @@ using Gemini Flash with function-adaptive system prompts.
 from langfuse import get_client as _lf_get_client
 from langfuse import observe
 
-import config
+from tamubot.core import config
 from tamubot.rag.gates import validate_citations_with_trace
 from tamubot.rag.prompts import (
     _BASE_SYSTEM,
