@@ -1,8 +1,8 @@
 """Tests for router_node behavior: OOS derivation, JSON parse failure fallback."""
 from unittest.mock import patch
 
-from rag.nodes.router_node import router_node
-from rag.router import RouterResult
+from tamubot.rag.nodes.router_node import router_node
+from tamubot.rag.router import RouterResult
 
 
 def _make_rr(function="hybrid_course"):
@@ -16,7 +16,7 @@ def _make_rr(function="hybrid_course"):
 
 def test_router_node_hybrid_course():
     rr = _make_rr("hybrid_course")
-    with patch("rag.router.classify_query", return_value=rr):
+    with patch("tamubot.rag.router.classify_query", return_value=rr):
         result = router_node({"query": "CSCE 221 office hours?", "node_trace": [], "timing_ms": {}})
     assert result["function"] == "hybrid_course"
     assert result["course_ids"] == ["202611_CSCE_221_500"]
@@ -26,7 +26,7 @@ def test_router_node_hybrid_course():
 def test_router_node_out_of_scope_derivation():
     """When function is out_of_scope, course_ids is empty and intent_type is None."""
     rr = _make_rr("out_of_scope")
-    with patch("rag.router.classify_query", return_value=rr):
+    with patch("tamubot.rag.router.classify_query", return_value=rr):
         result = router_node({"query": "what's the weather?", "node_trace": [], "timing_ms": {}})
     assert result["function"] == "out_of_scope"
     assert result["course_ids"] == []
@@ -34,7 +34,7 @@ def test_router_node_out_of_scope_derivation():
 
 def test_router_node_fallback_to_out_of_scope_on_exception():
     """If classify_query() throws, router_node falls back to out_of_scope."""
-    with patch("rag.router.classify_query", side_effect=Exception("LLM timeout")):
+    with patch("tamubot.rag.router.classify_query", side_effect=Exception("LLM timeout")):
         result = router_node({"query": "test", "node_trace": [], "timing_ms": {}})
     assert result["function"] == "out_of_scope"
     assert "error" in result
@@ -43,7 +43,7 @@ def test_router_node_fallback_to_out_of_scope_on_exception():
 
 def test_router_node_appends_to_node_trace():
     rr = _make_rr("hybrid_course")
-    with patch("rag.router.classify_query", return_value=rr):
+    with patch("tamubot.rag.router.classify_query", return_value=rr):
         result = router_node({"query": "test", "node_trace": ["prev"], "timing_ms": {}})
     assert "prev" in result["node_trace"]
     assert "router" in result["node_trace"]
@@ -73,7 +73,7 @@ def test_router_node_passes_prior_context_when_history_present():
         "timing_ms": {},
     }
 
-    with patch("rag.router.classify_query", return_value=rr) as mock_cq:
+    with patch("tamubot.rag.router.classify_query", return_value=rr) as mock_cq:
         router_node(state)
 
     call_kwargs = mock_cq.call_args.kwargs
@@ -88,7 +88,7 @@ def test_router_node_no_prior_context_when_history_empty():
     rr = RouterResult(course_ids=[], rewritten_query="test")
 
     state = {"query": "hello", "history": [], "node_trace": [], "timing_ms": {}}
-    with patch("rag.router.classify_query", return_value=rr) as mock_cq:
+    with patch("tamubot.rag.router.classify_query", return_value=rr) as mock_cq:
         router_node(state)
 
     call_kwargs = mock_cq.call_args.kwargs

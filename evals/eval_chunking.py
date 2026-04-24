@@ -26,12 +26,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+_repo = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _repo)
+sys.path.insert(0, str(Path(_repo) / "src"))
 
 # ---------------------------------------------------------------------------
 # Pre-parse collection/filter args BEFORE rag modules are imported.
 # rag/tools/mongo.py reads CHUNKS_COLLECTION etc. at import time, so env vars
-# must be set here — before the late `from rag.*` imports below (line ~102).
+# must be set here — before the late `from tamubot.rag.*` imports below (line ~102).
 # ---------------------------------------------------------------------------
 def _pre_arg(flag: str) -> "str | None":
     """Extract the value of a --flag VALUE pair from sys.argv without argparse."""
@@ -121,12 +123,12 @@ def _compute_aggregates(results: list[dict]) -> dict:
 # Retrieval — via the production eval graph (same code path as normal runs)
 # ---------------------------------------------------------------------------
 
-from rag.graph.pipeline import run_pipeline_eval  # noqa: E402
+from tamubot.rag.graph.pipeline import run_pipeline_eval  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Langfuse dataset upsert
 # ---------------------------------------------------------------------------
-from rag.observability import (  # noqa: E402
+from tamubot.rag.observability import (  # noqa: E402
     EvalInputs,
     chunking_config,
     create_trace,
@@ -263,6 +265,7 @@ def _run_one_query(
     return {
         "query":            question,
         "_chunks":          eval_chunks,      # kept for RAGAS in loop, excluded from results
+        "chunks_retrieved": len(eval_chunks),
         "latency_ms":       latency_ms,
         "recall_at_k":      None,             # filled by loop after RAGAS
         "context_precision": None,
@@ -289,7 +292,7 @@ def _score_trace(
     compute_retrieval_ragas() directly — not duplicated here.
     """
     # Per-query retrieval metrics
-    for name in ("retrieved_tokens", "avg_chunk_score", "precision_at_k", "hit_rate_at_k", "f1_at_k"):
+    for name in ("retrieved_tokens", "avg_chunk_score", "precision_at_k", "hit_rate_at_k", "f1_at_k", "chunks_retrieved"):
         value = row.get(name)
         if value is not None:
             lf.create_score(trace_id=trace_id, name=name, value=float(value))
@@ -578,6 +581,30 @@ def main() -> None:
 
     dataset_name = args.dataset or args.golden_set.stem
 
+    # Auto-detect chunk_size/chunk_overlap from MongoDB when not provided
+    chunk_size = args.chunk_size
+    chunk_overlap = args.chunk_overlap
+    if chunk_size is None or chunk_overlap is None:
+        try:
+            from pymongo import MongoClient
+
+            import config
+            from tamubot.rag.tools.mongo import CHUNKS_COLLECTION
+            _client = MongoClient(config.MONGODB_URI)
+            _db = _client[config.MONGODB_DB]
+            sample = _db[CHUNKS_COLLECTION].find_one(
+                {"chunk_size": {"$ne": None}},
+                {"chunk_size": 1, "chunk_overlap": 1},
+            )
+            if sample:
+                if chunk_size is None and sample.get("chunk_size"):
+                    chunk_size = sample["chunk_size"]
+                if chunk_overlap is None and sample.get("chunk_overlap"):
+                    chunk_overlap = sample["chunk_overlap"]
+                print(f"  Auto-detected from {CHUNKS_COLLECTION}: chunk_size={chunk_size}, chunk_overlap={chunk_overlap}")
+        except Exception as e:
+            logger.warning(f"Could not auto-detect chunk config: {e}")
+
     print(f"\nLoading golden set: {args.golden_set}")
     golden_items = _load_golden_set(args.golden_set)
     print(f"  {len(golden_items)} items loaded")
@@ -590,6 +617,8 @@ def main() -> None:
         f"  |  threshold: {args.threshold}"
         f"  |  top_k: {args.top_k or 'auto'}"
         f"  |  ragas: {'yes' if args.ragas else 'no'}"
+        f"  |  chunk_size: {chunk_size or '?'}"
+        f"  |  chunk_overlap: {chunk_overlap or '?'}"
     )
 
     results, run_name, run_col_results = run_eval(
@@ -600,8 +629,8 @@ def main() -> None:
         threshold=args.threshold,
         ragas_enabled=args.ragas,
         lf=lf,
-        chunk_size=args.chunk_size,
-        chunk_overlap=args.chunk_overlap,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
         description=args.description,
     )
 

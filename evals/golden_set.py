@@ -7,7 +7,6 @@ run:<experiment> columns are appended by eval scripts and ignored by load().
 """
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 SCHEMA_COLUMNS = ["id", "question", "reference_answer", "expected_function", "human_notes"]

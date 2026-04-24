@@ -20,7 +20,9 @@ import math
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+_repo = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _repo)
+sys.path.insert(0, str(Path(_repo) / "src"))
 
 import config
 
@@ -231,7 +233,7 @@ def rrf_sweep(
 
     import voyageai
 
-    from rag.tools.mongo import hybrid_search
+    from tamubot.rag.tools.mongo import hybrid_search
 
     vo = voyageai.Client(api_key=config.VOYAGE_API_KEY)
     query_embed = vo.embed([query], model="voyage-3", input_type="query").embeddings[0]
@@ -288,9 +290,9 @@ def evaluate_retrieval_golden_set(
     Returns:
         Dict with per-item results and aggregate statistics.
     """
-    from rag.router import classify_query, compute_dynamic_k
-    from rag.tools.mongo import hybrid_search, semantic_search
-    from rag.tools.voyage import rerank
+    from tamubot.rag.router import classify_query, compute_dynamic_k
+    from tamubot.rag.tools.mongo import hybrid_search, semantic_search
+    from tamubot.rag.tools.voyage import rerank
 
     item_results = []
     for i, item in enumerate(golden_set, 1):
@@ -444,9 +446,9 @@ def main():
 
     elif args.query:
         print(f"Evaluating single query: '{args.query}'")
-        from rag.router import classify_query
-        from rag.tools.mongo import hybrid_search
-        from rag.tools.voyage import rerank
+        from tamubot.rag.router import classify_query
+        from tamubot.rag.tools.mongo import hybrid_search
+        from tamubot.rag.tools.voyage import rerank
 
         rr = classify_query(args.query)
         print(f"  Router: fn={rr.function}, mode={rr.retrieval_mode}")

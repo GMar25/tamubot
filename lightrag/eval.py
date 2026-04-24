@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import config
 from lightrag import QueryParam
-from rag.observability.evals import EvalInputs, run_evals
+from tamubot.rag.observability.evals import EvalInputs, run_evals
 
 # Add spike dir to path for sibling imports
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -114,7 +114,7 @@ async def run_eval(golden_path: Path, storage_dir: Path | None = None, skip_raga
             row.elapsed_ms = int((time.time() - t0) * 1000)
 
             if not skip_ragas:
-                from rag.observability import benchmark_config
+                from tamubot.rag.observability import benchmark_config
                 print(f"  Scoring with RAGAS...")
                 obs = benchmark_config(ragas=True)
                 scores = run_evals(obs, EvalInputs(

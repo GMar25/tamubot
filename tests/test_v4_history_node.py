@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 def test_history_inject_empty_history_no_rewritten_query():
     """With no history, history_inject does not set rewritten_query (no context to add)."""
-    from rag.nodes.history_inject_node import history_inject_node
+    from tamubot.rag.nodes.history_inject_node import history_inject_node
     state = {
         "query": "what is CSCE 221?",
         "history": [],
@@ -19,7 +19,7 @@ def test_history_inject_empty_history_no_rewritten_query():
 
 def test_history_inject_with_2_prior_turns_enriches_query():
     """With prior history, history_inject appends context to rewritten_query and history_context."""
-    from rag.nodes.history_inject_node import history_inject_node
+    from tamubot.rag.nodes.history_inject_node import history_inject_node
     state = {
         "query": "what are the prerequisites?",
         "history": [
@@ -42,7 +42,7 @@ def test_history_update_appends_turn():
     """history_update_node should append current query + answer to history."""
     from unittest.mock import patch
 
-    from rag.nodes.history_update_node import history_update_node
+    from tamubot.rag.nodes.history_update_node import history_update_node
     state = {
         "query": "CSCE 221 grading?",
         "answer": "The grading uses 40% exams...",
@@ -52,7 +52,7 @@ def test_history_update_appends_turn():
         "node_trace": [],
         "timing_ms": {},
     }
-    with patch("rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
+    with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
          patch("config.SESSION_CACHE_ENABLED", False), \
          patch("config.MEM0_ENABLED", False):
         result = history_update_node(state)
@@ -66,13 +66,13 @@ def test_history_update_appends_turn():
 def test_history_update_increments_turn_number():
     from unittest.mock import patch
 
-    from rag.nodes.history_update_node import history_update_node
+    from tamubot.rag.nodes.history_update_node import history_update_node
     state = {
         "query": "test", "answer": "ok", "history": [],
         "router_result": None, "turn_number": 3,
         "node_trace": [], "timing_ms": {},
     }
-    with patch("rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
+    with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
          patch("config.SESSION_CACHE_ENABLED", False), \
          patch("config.MEM0_ENABLED", False):
         result = history_update_node(state)
@@ -84,7 +84,7 @@ def test_history_update_compression_triggered_at_max_turns():
     from unittest.mock import patch
 
     import config
-    from rag.nodes.history_update_node import history_update_node
+    from tamubot.rag.nodes.history_update_node import history_update_node
 
     # Build history longer than the limit
     n_turns = config.V4_MAX_HISTORY_TURNS + 2
@@ -102,7 +102,7 @@ def test_history_update_compression_triggered_at_max_turns():
         "node_trace": [],
         "timing_ms": {},
     }
-    with patch("rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
+    with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
          patch("config.SESSION_CACHE_ENABLED", False), \
          patch("config.MEM0_ENABLED", False):
         result = history_update_node(state)
@@ -114,14 +114,14 @@ def test_history_update_clears_non_checkpointable_fields():
     """history_update_node must set answer_stream to None."""
     from unittest.mock import patch
 
-    from rag.nodes.history_update_node import history_update_node
+    from tamubot.rag.nodes.history_update_node import history_update_node
     state = {
         "query": "test", "answer": "ok", "history": [],
         "router_result": None, "turn_number": 0,
         "answer_stream": iter([]),
         "node_trace": [], "timing_ms": {},
     }
-    with patch("rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
+    with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
          patch("config.SESSION_CACHE_ENABLED", False), \
          patch("config.MEM0_ENABLED", False):
         result = history_update_node(state)
@@ -130,7 +130,7 @@ def test_history_update_clears_non_checkpointable_fields():
 
 def test_history_inject_caps_at_6_messages():
     """history_inject_node only uses last 6 messages (3 turns) of context."""
-    from rag.nodes.history_inject_node import history_inject_node
+    from tamubot.rag.nodes.history_inject_node import history_inject_node
 
     # Build 10 turns of history
     long_history = []
@@ -157,7 +157,7 @@ def test_history_inject_caps_at_6_messages():
 
 def test_history_inject_includes_summary_when_present():
     """history_inject_node includes history_summary in history_context."""
-    from rag.nodes.history_inject_node import history_inject_node
+    from tamubot.rag.nodes.history_inject_node import history_inject_node
 
     state = {
         "query": "what are office hours?",
@@ -177,7 +177,7 @@ def test_history_inject_includes_summary_when_present():
 
 def test_history_inject_summary_appears_before_recent_turns():
     """Summary block must appear before recent turns in history_context."""
-    from rag.nodes.history_inject_node import history_inject_node
+    from tamubot.rag.nodes.history_inject_node import history_inject_node
 
     state = {
         "query": "any updates?",
@@ -203,7 +203,7 @@ def test_history_update_stores_router_result_summary():
     """history_update_node stores function and course_ids in rr_summary."""
     from unittest.mock import patch
 
-    from rag.nodes.history_update_node import history_update_node
+    from tamubot.rag.nodes.history_update_node import history_update_node
 
     state = {
         "query": "schedule for CSCE 638?",
@@ -215,7 +215,7 @@ def test_history_update_stores_router_result_summary():
         "node_trace": [],
         "timing_ms": {},
     }
-    with patch("rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
+    with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=MagicMock(text="")), \
          patch("config.SESSION_CACHE_ENABLED", False), \
          patch("config.MEM0_ENABLED", False):
         result = history_update_node(state)
@@ -229,7 +229,7 @@ def test_history_update_stores_router_result_summary():
 
 def test_history_inject_writes_context_to_rewritten_query_and_history_context():
     """history_inject_node appends history_context to rewritten_query; both carry prior turn content."""
-    from rag.nodes.history_inject_node import history_inject_node
+    from tamubot.rag.nodes.history_inject_node import history_inject_node
 
     original_query = "what are the prerequisites?"
     state = {
@@ -255,7 +255,7 @@ def test_history_inject_writes_context_to_rewritten_query_and_history_context():
 
 def test_history_inject_empty_history_no_context():
     """With no history, history_inject_node returns empty history_context and no rewritten_query."""
-    from rag.nodes.history_inject_node import history_inject_node
+    from tamubot.rag.nodes.history_inject_node import history_inject_node
 
     state = {
         "query": "what is CSCE 221?",
@@ -272,7 +272,7 @@ def test_history_update_node_updates_summary_on_second_turn():
     """history_update_node should call LLM to update history_summary when turn_number > 1."""
     from unittest.mock import patch
 
-    from rag.nodes.history_update_node import history_update_node
+    from tamubot.rag.nodes.history_update_node import history_update_node
 
     state = {
         "query": "What courses are available?",
@@ -291,11 +291,11 @@ def test_history_update_node_updates_summary_on_second_turn():
     mock_llm_result = MagicMock()
     mock_llm_result.text = "User asked about available courses. Bot listed CS options."
 
-    with patch("rag.nodes.history_update_node.call_llm", return_value=mock_llm_result) as mock_llm, \
+    with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=mock_llm_result) as mock_llm, \
          patch("config.MEM0_ENABLED", True), \
          patch("config.SESSION_CACHE_ENABLED", False), \
          patch("config.MEM0_API_KEY", "test-key"), \
-         patch("rag.nodes.history_update_node.Mem0Manager") as mock_mem0:
+         patch("tamubot.rag.nodes.history_update_node.Mem0Manager") as mock_mem0:
         mock_mem0.return_value.add_turn_async = MagicMock()
         result = history_update_node(state)
 
@@ -307,7 +307,7 @@ def test_history_update_node_updates_summary_on_first_turn():
     """history_update_node should call LLM on turn_number 0 (first turn)."""
     from unittest.mock import patch
 
-    from rag.nodes.history_update_node import history_update_node
+    from tamubot.rag.nodes.history_update_node import history_update_node
 
     state = {
         "query": "Hello",
@@ -326,11 +326,11 @@ def test_history_update_node_updates_summary_on_first_turn():
     mock_llm_result = MagicMock()
     mock_llm_result.text = "User greeted the bot."
 
-    with patch("rag.nodes.history_update_node.call_llm", return_value=mock_llm_result) as mock_llm, \
+    with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=mock_llm_result) as mock_llm, \
          patch("config.MEM0_ENABLED", True), \
          patch("config.SESSION_CACHE_ENABLED", False), \
          patch("config.MEM0_API_KEY", "test-key"), \
-         patch("rag.nodes.history_update_node.Mem0Manager") as mock_mem0:
+         patch("tamubot.rag.nodes.history_update_node.Mem0Manager") as mock_mem0:
         mock_mem0.return_value.add_turn_async = MagicMock()
         result = history_update_node(state)
 
@@ -342,7 +342,7 @@ def test_history_update_node_updates_summary_even_when_mem0_disabled():
     """history_update_node always updates history_summary regardless of MEM0_ENABLED."""
     from unittest.mock import patch
 
-    from rag.nodes.history_update_node import history_update_node
+    from tamubot.rag.nodes.history_update_node import history_update_node
 
     state = {
         "query": "Hello",
@@ -361,7 +361,7 @@ def test_history_update_node_updates_summary_even_when_mem0_disabled():
     mock_llm_result = MagicMock()
     mock_llm_result.text = "User greeted the bot."
 
-    with patch("rag.nodes.history_update_node.call_llm", return_value=mock_llm_result) as mock_llm, \
+    with patch("tamubot.rag.nodes.history_update_node.call_llm", return_value=mock_llm_result) as mock_llm, \
          patch("config.MEM0_ENABLED", False), \
          patch("config.SESSION_CACHE_ENABLED", False):
         result = history_update_node(state)
@@ -374,7 +374,7 @@ def test_history_inject_node_hybrid_context():
     """history_inject_node should combine facts + gist + last 2 turns."""
     from unittest.mock import patch
 
-    from rag.nodes.history_inject_node import history_inject_node
+    from tamubot.rag.nodes.history_inject_node import history_inject_node
 
     state = {
         "query": "Which ML course should I take?",
@@ -396,7 +396,7 @@ def test_history_inject_node_hybrid_context():
     mock_manager = MagicMock()
     mock_manager.search_context.return_value = "- user is a CS senior\n- prefers afternoon classes"
 
-    with patch("rag.nodes.history_inject_node.Mem0Manager", return_value=mock_manager), \
+    with patch("tamubot.rag.nodes.history_inject_node.Mem0Manager", return_value=mock_manager), \
          patch("config.MEM0_ENABLED", True), \
          patch("config.MEM0_API_KEY", "test-key"):
         result = history_inject_node(state)
@@ -415,7 +415,7 @@ def test_history_inject_node_no_mem0_falls_back_to_gist_and_flow():
     """Without mem0 enabled, should still return gist + flow."""
     from unittest.mock import patch
 
-    from rag.nodes.history_inject_node import history_inject_node
+    from tamubot.rag.nodes.history_inject_node import history_inject_node
 
     state = {
         "query": "Tell me more",

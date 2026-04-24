@@ -1,0 +1,36 @@
+# tamubot.rag — RAG Pipeline
+
+Development is done by Claude Code inside Docker Container `tamubot-dev-1`
+
+## Public API
+
+```python
+from tamubot.rag import run_pipeline, run_pipeline_with_memory, get_current_state
+from tamubot.rag import ChunkDoc, CourseDoc, PolicyDoc, VALID_CATEGORIES
+from tamubot.rag import RouterResult, PipelineState, ConversationState
+from tamubot.rag import get_langfuse
+from tamubot.rag.observability import prod_config, probe_config, benchmark_config, chunking_config
+from tamubot.rag.observability import create_trace, finalize_trace, EvalInputs, run_evals
+```
+
+## LLM Client
+
+All LLM calls go through `tamubot/rag/tools/llm.py` — do NOT call `config.get_tamu_client()` / `config.get_genai_client()` directly in nodes:
+
+```python
+result = call_llm(messages, temperature=0, max_tokens=4096, json_mode=True, thinking_budget=512)
+for token in stream_llm(messages, temperature=0.2, max_tokens=4096, thinking_budget=1024):
+```
+
+- `result.input_tokens / output_tokens` — None on TAMU path (SSE, no token counts exposed)
+- Langfuse model name: `config.TAMU_MODEL if config.USE_TAMU_API else config.GENERATION_MODEL`
+
+
+## Gotchas
+
+- **TAMU gateway `max_tokens`**: min 4096 on ALL `call_llm()` calls — smaller values return empty response
+- **`generate_eval_search_string`**: uses `max_tokens=4096` (not 256) for TAMU compat
+- **Gemini JSON mode**: free-form Markdown fields silently return empty → always render Markdown in Python (`_render_comparison_markdown()`)
+- **Primacy-recency** (`format_context_xml`): rank 1 → context start, rank 2 → context end, ranks 3–N → middle
+- **Gate 1** (sync, regex): `validate_citations_with_trace()` — checks `[Source N]` presence after generation
+- **Observability**: `tamubot/rag/observability/` package — config-driven tracing + eval blocks

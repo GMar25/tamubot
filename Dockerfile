@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
 
 # Python deps (baked in for faster container startup)
 COPY requirements.txt pyproject.toml ./
+COPY src/ src/
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -e ".[v4]"

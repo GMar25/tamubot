@@ -21,16 +21,18 @@ from datetime import datetime
 from pathlib import Path
 
 # Ensure repo root is on path when run from repo root
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+_repo = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _repo)
+sys.path.insert(0, str(Path(_repo) / "src"))
 
 # UTF-8 stdout for Windows (avoids cp1252 encode errors for ✅ ❌ etc.)
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 import config
-from rag import RouterResult
-from rag.generator import generate
-from rag.router import (
+from tamubot.rag import RouterResult
+from tamubot.rag.generator import generate
+from tamubot.rag.router import (
     FUNCTION_CATEGORY_STRATEGIES,
     classify_query,
     compute_dynamic_k,
@@ -538,7 +540,7 @@ def run_test(
 
     if do_ragas and not dry_run and chunks and response_text and not generation_error:
         try:
-            from rag import compute_ragas_metrics
+            from tamubot.rag import compute_ragas_metrics
             contexts = [c.get("content", "") for c in chunks if c.get("content")]
             scores = compute_ragas_metrics(
                 question=tc.query,
@@ -615,7 +617,7 @@ def _do_retrieval(rr: RouterResult, query: str) -> list[dict]:
     Mirrors the logic in router._retrieve_and_rerank() for use in the eval harness
     (avoids re-running the router LLM call).
     """
-    from rag import reranker, search
+    from tamubot.rag import reranker, search
 
     search_query = rr.rewritten_query or query
 
@@ -646,8 +648,8 @@ def _do_retrieval(rr: RouterResult, query: str) -> list[dict]:
 
     # recurrent_* path: 5-step deterministic cardinality pipeline
     if fn.startswith("recurrent_"):
-        from rag.generator import generate_eval_search_string
-        from rag.tools.mongo import fetch_anchor_chunks
+        from tamubot.rag.generator import generate_eval_search_string
+        from tamubot.rag.tools.mongo import fetch_anchor_chunks
         anchor_chunks, _, _ = fetch_anchor_chunks(course_ids, categories)
         eval_query = generate_eval_search_string(
             anchor_chunks, search_query, rr.intent_type or "GENERAL"

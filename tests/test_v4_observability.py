@@ -1,8 +1,8 @@
 """Tests for graph middleware and pipeline observability wiring."""
 from unittest.mock import MagicMock, patch
 
-from rag.graph.exceptions import V4PipelineError
-from rag.graph.middleware import error_guard_middleware, timing_middleware
+from tamubot.rag.graph.exceptions import V4PipelineError
+from tamubot.rag.graph.middleware import error_guard_middleware, timing_middleware
 
 # ── timing_middleware tests ──────────────────────────────────────────────────
 
@@ -90,8 +90,8 @@ def test_pipeline_does_not_inject_callbacks():
         "answer": "",
     }
 
-    import rag.graph.pipeline as pipeline_mod
-    from rag.graph.pipeline import run_pipeline_with_memory
+    import tamubot.rag.graph.pipeline as pipeline_mod
+    from tamubot.rag.graph.pipeline import run_pipeline_with_memory
 
     mock_graph = MagicMock()
     mock_graph.invoke.return_value = mock_graph_result
@@ -130,8 +130,8 @@ def test_pipeline_no_callback_when_trace_is_none():
         "answer": "",
     }
 
-    import rag.graph.pipeline as pipeline_mod
-    from rag.graph.pipeline import run_pipeline_with_memory
+    import tamubot.rag.graph.pipeline as pipeline_mod
+    from tamubot.rag.graph.pipeline import run_pipeline_with_memory
 
     mock_graph = MagicMock()
     mock_graph.invoke.return_value = mock_graph_result

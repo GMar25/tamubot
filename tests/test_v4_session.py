@@ -1,5 +1,5 @@
 """Tests for SessionManager and multi-turn session state."""
-from rag.graph.session import SessionManager
+from tamubot.rag.graph.session import SessionManager
 
 
 def test_same_session_id_gets_same_thread_id():
@@ -49,8 +49,8 @@ def test_inject_trace_adds_trace_to_state():
 
 def test_two_turns_same_session_share_history():
     """With MemorySaver, two invocations with the same thread_id accumulate history."""
-    from rag.graph.builder import build_graph_with_memory
-    from rag.graph.checkpointer import make_checkpointer
+    from tamubot.rag.graph.builder import build_graph_with_memory
+    from tamubot.rag.graph.checkpointer import make_checkpointer
 
     checkpointer = make_checkpointer("memory")
     graph = build_graph_with_memory(checkpointer=checkpointer)
@@ -82,8 +82,8 @@ def test_two_turns_same_session_share_history():
 
 def test_two_different_sessions_are_independent():
     """Two different thread_ids don't share state."""
-    from rag.graph.builder import build_graph_with_memory
-    from rag.graph.checkpointer import make_checkpointer
+    from tamubot.rag.graph.builder import build_graph_with_memory
+    from tamubot.rag.graph.checkpointer import make_checkpointer
 
     checkpointer = make_checkpointer("memory")
     graph = build_graph_with_memory(checkpointer=checkpointer)
@@ -111,7 +111,7 @@ def test_sqlite_checkpointer_path_is_absolute():
     import os
     from pathlib import Path
 
-    import rag.graph.checkpointer as cp_mod
+    import tamubot.rag.graph.checkpointer as cp_mod
 
     db_path = str(Path(cp_mod.__file__).parent / "sessions.db")
     assert os.path.isabs(db_path), f"Expected absolute path, got: {db_path}"

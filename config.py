@@ -4,7 +4,27 @@ import time
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
+
+# If TAMU_API_KEY is commented out in .env but baked into the container env,
+# dotenv cannot clear it.  Detect this and unset the env var so USE_TAMU_API
+# respects .env intent.
+def _dotenv_has_active_key(key: str, path: str = ".env") -> bool:
+    """Return True if .env contains an uncommented assignment for *key*."""
+    try:
+        with open(path) as f:
+            for line in f:
+                stripped = line.strip()
+                if stripped.startswith("#") or not stripped:
+                    continue
+                if stripped.split("=", 1)[0].strip() == key:
+                    return True
+    except FileNotFoundError:
+        pass
+    return False
+
+if not _dotenv_has_active_key("TAMU_API_KEY"):
+    os.environ.pop("TAMU_API_KEY", None)
 
 # --- GCP / Vertex AI (legacy, kept as fallback) ---
 PROJECT_ID = os.getenv("PROJECT_ID", "glossy-surge-486017-g8")

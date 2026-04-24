@@ -8,9 +8,9 @@ Tests cover:
 """
 
 import config
-from rag.gates import validate_citations_gate1
-from rag.prompts import _FUNCTION_TEMPERATURES
-from rag.tools.context import format_context_xml
+from tamubot.rag.gates import validate_citations_gate1
+from tamubot.rag.prompts import _FUNCTION_TEMPERATURES
+from tamubot.rag.tools.context import format_context_xml
 
 
 class TestFormatContextXmlPrimacyRecency:
@@ -182,7 +182,7 @@ def test_generate_stream_includes_conversation_history_block():
     """generate_stream with history_context includes <conversation_history> XML block."""
     from unittest.mock import patch
 
-    from rag.generator import generate_stream
+    from tamubot.rag.generator import generate_stream
 
     captured_messages = []
 
@@ -193,7 +193,7 @@ def test_generate_stream_includes_conversation_history_block():
     chunks = [{"content": "Grading is 40% exams.", "course_id": "CSCE 638", "category": "GRADING"}]
     history_ctx = "User: What is CSCE 638?\nAssistant: It is a grad ML course."
 
-    with patch("rag.generator.stream_llm", side_effect=mock_stream_llm):
+    with patch("tamubot.rag.generator.stream_llm", side_effect=mock_stream_llm):
         list(generate_stream(
             results=chunks,
             question="What is the grading?",
@@ -213,7 +213,7 @@ def test_generate_stream_no_history_context_no_block():
     """generate_stream without history_context does not include <conversation_history> block."""
     from unittest.mock import patch
 
-    from rag.generator import generate_stream
+    from tamubot.rag.generator import generate_stream
 
     captured_messages = []
 
@@ -223,7 +223,7 @@ def test_generate_stream_no_history_context_no_block():
 
     chunks = [{"content": "Grading is 40% exams.", "course_id": "CSCE 638", "category": "GRADING"}]
 
-    with patch("rag.generator.stream_llm", side_effect=mock_stream_llm):
+    with patch("tamubot.rag.generator.stream_llm", side_effect=mock_stream_llm):
         list(generate_stream(
             results=chunks,
             question="What is the grading?",
@@ -235,26 +235,26 @@ def test_generate_stream_no_history_context_no_block():
 
 
 def test_base_system_no_chain_of_thought_instruction():
-    from rag.prompts import _BASE_SYSTEM
+    from tamubot.rag.prompts import _BASE_SYSTEM
     assert "Before answering, identify which chunk" not in _BASE_SYSTEM
 
 
 def test_comparison_system_exists_and_is_compact():
-    from rag.prompts import COMPARISON_SYSTEM
+    from tamubot.rag.prompts import COMPARISON_SYSTEM
     assert len(COMPARISON_SYSTEM) < 1200
     assert "compare" in COMPARISON_SYSTEM.lower()
 
 
 def test_router_prompt_has_all_required_output_fields():
-    from rag.prompts import ROUTER_PROMPT
+    from tamubot.rag.prompts import ROUTER_PROMPT
     for field in ["course_ids", "intent_type", "recursive_search", "rewritten_query"]:
         assert field in ROUTER_PROMPT, f"ROUTER_PROMPT missing field: {field}"
 
 
 def test_generate_comparison_uses_comparison_system(monkeypatch):
     """generate_comparison streams using COMPARISON_SYSTEM as the system prompt."""
-    import rag.generator as gen_mod
-    from rag.prompts import COMPARISON_SYSTEM
+    import tamubot.rag.generator as gen_mod
+    from tamubot.rag.prompts import COMPARISON_SYSTEM
 
     captured_messages = []
 
