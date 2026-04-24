@@ -20,11 +20,7 @@ import math
 import sys
 from pathlib import Path
 
-_repo = str(Path(__file__).resolve().parent.parent)
-sys.path.insert(0, _repo)
-sys.path.insert(0, str(Path(_repo) / "src"))
-
-import config
+from tamubot.core import config
 
 # ---------------------------------------------------------------------------
 # Relevance labeling

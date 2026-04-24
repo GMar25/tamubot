@@ -20,16 +20,11 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-# Ensure repo root is on path when run from repo root
-_repo = str(Path(__file__).resolve().parent.parent)
-sys.path.insert(0, _repo)
-sys.path.insert(0, str(Path(_repo) / "src"))
-
 # UTF-8 stdout for Windows (avoids cp1252 encode errors for ✅ ❌ etc.)
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-import config
+from tamubot.core import config
 from tamubot.rag import RouterResult
 from tamubot.rag.generator import generate
 from tamubot.rag.router import (

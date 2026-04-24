@@ -26,9 +26,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-_repo = str(Path(__file__).resolve().parent.parent)
-sys.path.insert(0, _repo)
-sys.path.insert(0, str(Path(_repo) / "src"))
 
 # ---------------------------------------------------------------------------
 # Pre-parse collection/filter args BEFORE rag modules are imported.
@@ -51,8 +48,8 @@ if _col := _pre_arg("--chunks-collection"):
 if _ct := _pre_arg("--chunk-tag"):
     os.environ.setdefault("CHUNK_TAG_FILTER", _ct)
 
-from evals.golden_set import append_run_column as _append_run_column  # noqa: E402
-from evals.golden_set import load as _load_golden_set  # noqa: E402
+from tamubot.evals.golden_set import append_run_column as _append_run_column  # noqa: E402
+from tamubot.evals.golden_set import load as _load_golden_set  # noqa: E402
 
 logger = logging.getLogger("tamubot.eval_chunking")
 
@@ -82,7 +79,7 @@ def compute_embedding_metrics(
     if not chunks:
         return {"precision_at_k": 0.0, "hit_rate_at_k": 0.0, "retrieved_tokens": 0}
 
-    from evals.eval_retrieval_metrics import label_relevant
+    from tamubot.evals.eval_retrieval_metrics import label_relevant
 
     labels = _labels if _labels is not None else label_relevant(query, chunks, threshold)
     k = len(labels)

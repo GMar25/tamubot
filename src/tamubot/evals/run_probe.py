@@ -29,19 +29,13 @@ import re
 import sys
 import time
 from datetime import datetime
-from pathlib import Path
-
-# Ensure repo root is on sys.path when invoked from repo root
-_repo = str(Path(__file__).resolve().parent.parent)
-sys.path.insert(0, _repo)
-sys.path.insert(0, str(Path(_repo) / "src"))
 
 # UTF-8 stdout on Windows (avoids cp1252 encode errors)
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-import config
-from evals.eval_pipeline import (  # noqa: F401  (TestCase re-exported for callers)
+from tamubot.core import config
+from tamubot.evals.eval_pipeline import (  # noqa: F401  (TestCase re-exported for callers)
     TEST_SUITE,
     TestCase,
 )

@@ -1,6 +1,6 @@
 """Tests for evals/golden_set.py — load, save, append_run_column."""
 import pytest
-from evals.golden_set import SCHEMA_COLUMNS
+from tamubot.evals.golden_set import SCHEMA_COLUMNS
 
 
 SAMPLE_ITEMS = [
@@ -12,7 +12,7 @@ SAMPLE_ITEMS = [
 
 
 def test_save_then_load_roundtrip(tmp_path):
-    from evals.golden_set import load, save
+    from tamubot.evals.golden_set import load, save
     path = tmp_path / "test.xlsx"
     save(SAMPLE_ITEMS, path)
     loaded = load(path)
@@ -24,7 +24,7 @@ def test_save_then_load_roundtrip(tmp_path):
 
 
 def test_load_skips_empty_question_rows(tmp_path):
-    from evals.golden_set import load, save
+    from tamubot.evals.golden_set import load, save
     items = SAMPLE_ITEMS + [
         {"id": 3, "question": "", "reference_answer": "", "expected_function": "", "human_notes": None}
     ]
@@ -36,7 +36,7 @@ def test_load_skips_empty_question_rows(tmp_path):
 
 def test_load_ignores_run_columns(tmp_path):
     import openpyxl
-    from evals.golden_set import save, load
+    from tamubot.evals.golden_set import save, load
     path = tmp_path / "test.xlsx"
     save(SAMPLE_ITEMS, path)
 
@@ -53,7 +53,7 @@ def test_load_ignores_run_columns(tmp_path):
 
 
 def test_append_run_column_adds_column(tmp_path):
-    from evals.golden_set import save, append_run_column
+    from tamubot.evals.golden_set import save, append_run_column
     import openpyxl
     path = tmp_path / "test.xlsx"
     save(SAMPLE_ITEMS, path)
@@ -70,7 +70,7 @@ def test_append_run_column_adds_column(tmp_path):
 
 
 def test_append_run_column_overwrites_existing(tmp_path):
-    from evals.golden_set import save, append_run_column
+    from tamubot.evals.golden_set import save, append_run_column
     import openpyxl
     path = tmp_path / "test.xlsx"
     save(SAMPLE_ITEMS, path)
@@ -89,7 +89,7 @@ def test_append_run_column_overwrites_existing(tmp_path):
 
 def test_eval_chunking_accepts_xlsx_and_appends_run_column(tmp_path):
     """eval_chunking.load_golden_set is gone; xlsx round-trips through golden_set.load."""
-    from evals.golden_set import save, load
+    from tamubot.evals.golden_set import save, load
     items = [
         {"id": 1, "question": "What is CSCE 611 about?", "reference_answer": "OS course.",
          "expected_function": "hybrid_course", "human_notes": None},
@@ -98,5 +98,5 @@ def test_eval_chunking_accepts_xlsx_and_appends_run_column(tmp_path):
     save(items, path)
     loaded = load(path)
     # confirm load_golden_set no longer exists in eval_chunking
-    import evals.eval_chunking as ec
+    import tamubot.evals.eval_chunking as ec
     assert not hasattr(ec, "load_golden_set")

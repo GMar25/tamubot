@@ -25,10 +25,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-_repo = str(Path(__file__).resolve().parent.parent)
-sys.path.insert(0, _repo)
-sys.path.insert(0, str(Path(_repo) / "src"))
-
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -50,9 +46,9 @@ if _col := _pre_arg("--chunks-collection"):
     os.environ.setdefault("VECTOR_INDEX", f"vector_index_{_suffix}")
     os.environ.setdefault("TEXT_INDEX", f"text_index_{_suffix}")
 
-import config
-from evals.golden_set import append_run_column as _append_run_column
-from evals.golden_set import load as _load_golden_set
+from tamubot.core import config
+from tamubot.evals.golden_set import append_run_column as _append_run_column
+from tamubot.evals.golden_set import load as _load_golden_set
 from tamubot.rag import RouterResult
 from tamubot.rag.generator import generate_stream
 from tamubot.rag.graph.pipeline import run_pipeline as run_pipeline_v4

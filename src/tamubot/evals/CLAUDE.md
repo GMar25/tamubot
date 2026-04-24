@@ -2,9 +2,9 @@
 
 ## Probe
 ```bash
-python evals/run_probe.py --suite smoke
-python evals/run_probe.py --query "..." [--memory] [--thread-id ID] [--tag label] [--ragas]
-python evals/run_probe.py --test-ids 1 3 7
+python -m tamubot.evals.run_probe --suite smoke
+python -m tamubot.evals.run_probe --query "..." [--memory] [--thread-id ID] [--tag label] [--ragas]
+python -m tamubot.evals.run_probe --test-ids 1 3 7
 ```
 
 ## Benchmark (A/B)
@@ -19,6 +19,6 @@ make validate-ragas BENCH=...           # after filling human_judgment column
 
 ## Key Exports
 ```python
-from evals.eval_pipeline import TEST_SUITE, TestCase
+from tamubot.evals.eval_pipeline import TEST_SUITE, TestCase
 ```
 
