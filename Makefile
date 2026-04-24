@@ -6,7 +6,7 @@
 # --- App ---
 run:
 	@echo "Starting TamuBot..."
-	@streamlit run app.py --server.headless true
+	@streamlit run src/tamubot/app/streamlit.py --server.headless true
 
 # --- Data Pipeline ---
 scrape-catalog:
@@ -41,10 +41,10 @@ typecheck:
 	mypy src/tamubot/ --ignore-missing-imports
 
 lint:
-	ruff check src/tamubot/ app.py config.py
+	ruff check src/tamubot/ config.py
 
 format:
-	ruff format src/tamubot/ app.py config.py
+	ruff format src/tamubot/ config.py
 
 probe:
 	python -m tamubot.evals.run_probe --suite smoke
