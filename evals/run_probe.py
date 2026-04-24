@@ -32,7 +32,9 @@ from datetime import datetime
 from pathlib import Path
 
 # Ensure repo root is on sys.path when invoked from repo root
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+_repo = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _repo)
+sys.path.insert(0, str(Path(_repo) / "src"))
 
 # UTF-8 stdout on Windows (avoids cp1252 encode errors)
 if hasattr(sys.stdout, "reconfigure"):
@@ -43,9 +45,9 @@ from evals.eval_pipeline import (  # noqa: F401  (TestCase re-exported for calle
     TEST_SUITE,
     TestCase,
 )
-from rag import run_pipeline_with_memory
-from rag.graph.pipeline import run_pipeline
-from rag.observability import (
+from tamubot.rag import run_pipeline_with_memory
+from tamubot.rag.graph.pipeline import run_pipeline
+from tamubot.rag.observability import (
     EvalInputs,
     create_trace,
     finalize_trace,

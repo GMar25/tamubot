@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from rag.router import RouterResult
+from tamubot.rag.router import RouterResult
 
 # Sample queries covering all 4 function types.
 PARITY_QUERIES = [
@@ -63,8 +63,8 @@ def test_classify_query_function_classification(query, expected_function, mock_r
     Patches rag.router.classify_query to verify the mock result passes through
     correctly and the function field is set.
     """
-    with patch("rag.router.classify_query", return_value=mock_rr):
-        from rag.router import classify_query
+    with patch("tamubot.rag.router.classify_query", return_value=mock_rr):
+        from tamubot.rag.router import classify_query
         result = classify_query(query)
 
     assert result.function == expected_function

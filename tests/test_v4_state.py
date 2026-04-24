@@ -1,7 +1,7 @@
 """Tests for v4 PipelineState contract."""
 import typing
 
-from rag.state.pipeline_state import ConversationMessage, ConversationState, PipelineState
+from tamubot.rag.state.pipeline_state import ConversationMessage, ConversationState, PipelineState
 
 
 def test_pipeline_state_importable():
@@ -56,7 +56,7 @@ def test_no_router_result_field_in_pipeline_state():
 
 
 def test_recursive_prompt_key_exists():
-    from rag.prompts import _FUNCTION_PROMPTS, _FUNCTION_TEMPERATURES
+    from tamubot.rag.prompts import _FUNCTION_PROMPTS, _FUNCTION_TEMPERATURES
     assert "recursive" in _FUNCTION_PROMPTS
     assert "recurrent" not in _FUNCTION_PROMPTS
     assert "recursive" in _FUNCTION_TEMPERATURES
@@ -64,6 +64,6 @@ def test_recursive_prompt_key_exists():
 
 
 def test_router_prompt_uses_recursive_search():
-    from rag.prompts import ROUTER_PROMPT
+    from tamubot.rag.prompts import ROUTER_PROMPT
     assert "recursive_search" in ROUTER_PROMPT
     assert "recurrent_search" not in ROUTER_PROMPT

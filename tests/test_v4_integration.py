@@ -1,8 +1,8 @@
 """Integration tests: full graph run with mock tools for all 3 main paths."""
 from unittest.mock import patch
 
-from rag.graph.builder import build_graph
-from rag.router import RouterResult
+from tamubot.rag.graph.builder import build_graph
+from tamubot.rag.router import RouterResult
 
 
 def _invoke_graph(function: str):
@@ -15,16 +15,16 @@ def _invoke_graph(function: str):
         recursive_search=is_recursive,
     )
 
-    with patch("rag.router.classify_query", return_value=rr), \
-         patch("rag.tools.mongo.hybrid_search", return_value=[
+    with patch("tamubot.rag.router.classify_query", return_value=rr), \
+         patch("tamubot.rag.tools.mongo.hybrid_search", return_value=[
              {"course_id": "202611_CSCE_221_500", "text": "hybrid"}
          ]), \
-         patch("rag.tools.mongo.semantic_search", return_value=[
+         patch("tamubot.rag.tools.mongo.semantic_search", return_value=[
              {"course_id": "202611_CSCE_314_500", "text": "sem"}
          ]), \
-         patch("rag.tools.voyage.rerank", side_effect=lambda q, c, top_k: c), \
-         patch("rag.generator.generate_stream", return_value=iter(["answer"])), \
-         patch("rag.tools.llm.call_llm") as mock_llm:
+         patch("tamubot.rag.tools.voyage.rerank", side_effect=lambda q, c, top_k: c), \
+         patch("tamubot.rag.generator.generate_stream", return_value=iter(["answer"])), \
+         patch("tamubot.rag.tools.llm.call_llm") as mock_llm:
         mock_llm.return_value.text = (
             '{"function": "semantic_general", "course_ids": [], "rewritten_query": "related courses"}'
         )

@@ -15,12 +15,13 @@ spike = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["rag*"]
+where = ["src"]
+include = ["tamubot*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v"
-pythonpath = ["."]
+pythonpath = [".", "src"]
 
 [tool.mypy]
 python_version = "3.14"
@@ -33,8 +34,8 @@ line-length = 120
 select = ["E", "F", "I"]
 
 [tool.ruff.lint.per-file-ignores]
-"evals/*.py" = ["E501"]
-"ingestion_pipeline/process_syllabi.py" = ["E501"]
-"ingestion_pipeline/process_syllabi_v3.py" = ["E501"]
-"ingestion_pipeline/legacy/standardize_syllabi.py" = ["E501"]
-"ingestion_pipeline/test_gemini_parse.py" = ["E501"]
+"evals/*.py" = ["E402", "E501"]
+"src/tamubot/ingestion/process_syllabi.py" = ["E501"]
+"src/tamubot/ingestion/process_syllabi_v3.py" = ["E501"]
+"src/tamubot/ingestion/legacy/standardize_syllabi.py" = ["E501"]
+"src/tamubot/ingestion/test_gemini_parse.py" = ["E501"]

@@ -1,8 +1,8 @@
 """Tests for the LangGraph graph with mock tools."""
 from unittest.mock import MagicMock, patch
 
-from rag.graph.builder import build_graph
-from rag.router import RouterResult
+from tamubot.rag.graph.builder import build_graph
+from tamubot.rag.router import RouterResult
 
 
 def _base_state(**extra):
@@ -28,17 +28,17 @@ def _make_rr(function="hybrid_course"):
 
 def _invoke_graph(function="hybrid_course", query="what are office hours?"):
     rr = _make_rr(function)
-    with patch("rag.router.classify_query", return_value=rr), \
-         patch("rag.tools.mongo.hybrid_search", return_value=[
+    with patch("tamubot.rag.router.classify_query", return_value=rr), \
+         patch("tamubot.rag.tools.mongo.hybrid_search", return_value=[
              {"course_id": "202611_CSCE_221_500", "chunk_index": 0, "text": "result"}
          ]), \
-         patch("rag.tools.mongo.semantic_search", return_value=[
+         patch("tamubot.rag.tools.mongo.semantic_search", return_value=[
              {"course_id": "202611_CSCE_314_500", "chunk_index": 0, "text": "sem result"}
          ]), \
-         patch("rag.tools.voyage.rerank", side_effect=lambda q, c, top_k, **kwargs: c[:top_k] if c else []), \
-         patch("rag.generator.generate_stream", return_value=iter(["Hello ", "world"])), \
-         patch("rag.tools.llm.stream_llm", return_value=iter(["That's out of scope."])), \
-         patch("rag.tools.llm.call_llm") as mock_llm:
+         patch("tamubot.rag.tools.voyage.rerank", side_effect=lambda q, c, top_k, **kwargs: c[:top_k] if c else []), \
+         patch("tamubot.rag.generator.generate_stream", return_value=iter(["Hello ", "world"])), \
+         patch("tamubot.rag.tools.llm.stream_llm", return_value=iter(["That's out of scope."])), \
+         patch("tamubot.rag.tools.llm.call_llm") as mock_llm:
         mock_llm.return_value.text = (
             '{"function": "semantic_general", "course_ids": [], "rewritten_query": "related courses"}'
         )
@@ -81,8 +81,8 @@ def test_recursive_path_no_deleted_nodes():
 
 
 def test_generator_node_answer_stream_is_list():
-    from rag.nodes.generator_node import generator_node
-    with patch("rag.generator.generate_stream", return_value=iter(["Hello ", "world"])):
+    from tamubot.rag.nodes.generator_node import generator_node
+    with patch("tamubot.rag.generator.generate_stream", return_value=iter(["Hello ", "world"])):
         state = {"query": "test", "node_trace": [], "timing_ms": {}}
         result = generator_node(state)
     assert isinstance(result["answer_stream"], list)
@@ -91,8 +91,8 @@ def test_generator_node_answer_stream_is_list():
 
 
 def test_out_of_scope_node_answer_stream_is_list():
-    from rag.nodes.out_of_scope_node import out_of_scope_node
-    with patch("rag.nodes.out_of_scope_node.stream_llm", return_value=iter(["That's out of scope. ", "Please ask about TAMU courses."])):
+    from tamubot.rag.nodes.out_of_scope_node import out_of_scope_node
+    with patch("tamubot.rag.nodes.out_of_scope_node.stream_llm", return_value=iter(["That's out of scope. ", "Please ask about TAMU courses."])):
         state = {"query": "tell me a joke", "node_trace": [], "timing_ms": {}}
         result = out_of_scope_node(state)
     assert isinstance(result["answer_stream"], list)
@@ -103,8 +103,8 @@ def test_out_of_scope_node_answer_stream_is_list():
 
 def test_out_of_scope_node_falls_back_on_llm_error():
     """When stream_llm raises, node should return _OOS_FALLBACK without crashing."""
-    from rag.nodes.out_of_scope_node import _OOS_FALLBACK, out_of_scope_node
-    with patch("rag.nodes.out_of_scope_node.stream_llm", side_effect=RuntimeError("API down")):
+    from tamubot.rag.nodes.out_of_scope_node import _OOS_FALLBACK, out_of_scope_node
+    with patch("tamubot.rag.nodes.out_of_scope_node.stream_llm", side_effect=RuntimeError("API down")):
         state = {"query": "tell me a joke", "node_trace": [], "timing_ms": {}}
         result = out_of_scope_node(state)
     assert result["answer"] == _OOS_FALLBACK
@@ -112,8 +112,8 @@ def test_out_of_scope_node_falls_back_on_llm_error():
     assert "out_of_scope" in result["node_trace"]
 
 def test_pipeline_with_memory_returns_six_tuple():
-    import rag.graph.pipeline as pipeline_mod
-    from rag.graph.pipeline import run_pipeline_with_memory
+    import tamubot.rag.graph.pipeline as pipeline_mod
+    from tamubot.rag.graph.pipeline import run_pipeline_with_memory
 
     mock_result = {
         "retrieved_chunks": [],

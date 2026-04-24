@@ -6,18 +6,18 @@ from unittest.mock import MagicMock, patch
 
 def _clear_cache():
     """Clear the module-level embed cache between tests to ensure isolation."""
-    import rag.tools.voyage as voyage_mod
+    import tamubot.rag.tools.voyage as voyage_mod
     voyage_mod._embed_cache.clear()
 
 
 def test_embed_query_single_thread_calls_api_once():
     """Sequential repeated calls for the same text hit the cache after the first call."""
-    from rag.tools.voyage import embed_query
+    from tamubot.rag.tools.voyage import embed_query
 
     _clear_cache()
     fake_embedding = [0.1, 0.2, 0.3]
 
-    with patch("rag.tools.voyage._get_client") as mock_get_client:
+    with patch("tamubot.rag.tools.voyage._get_client") as mock_get_client:
         mock_client = MagicMock()
         mock_client.embed.return_value.embeddings = [fake_embedding]
         mock_get_client.return_value = mock_client
@@ -35,7 +35,7 @@ def test_embed_query_single_thread_calls_api_once():
 def test_embed_query_parallel_threads_call_api_exactly_once():
     """When N threads simultaneously call embed_query with the same text,
     only ONE Voyage API call should be made (double-checked lock prevents thundering herd)."""
-    from rag.tools.voyage import embed_query
+    from tamubot.rag.tools.voyage import embed_query
 
     _clear_cache()
     fake_embedding = [0.4, 0.5, 0.6]
@@ -48,7 +48,7 @@ def test_embed_query_parallel_threads_call_api_exactly_once():
         except Exception as exc:
             errors.append(exc)
 
-    with patch("rag.tools.voyage._get_client") as mock_get_client:
+    with patch("tamubot.rag.tools.voyage._get_client") as mock_get_client:
         mock_client = MagicMock()
         mock_client.embed.return_value.embeddings = [fake_embedding]
         mock_get_client.return_value = mock_client
@@ -72,11 +72,11 @@ def test_embed_query_parallel_threads_call_api_exactly_once():
 
 def test_embed_query_different_texts_each_call_api_once():
     """Different query texts each get their own cache entry and API call."""
-    from rag.tools.voyage import embed_query
+    from tamubot.rag.tools.voyage import embed_query
 
     _clear_cache()
 
-    with patch("rag.tools.voyage._get_client") as mock_get_client:
+    with patch("tamubot.rag.tools.voyage._get_client") as mock_get_client:
         mock_client = MagicMock()
         mock_client.embed.side_effect = lambda texts, **kw: MagicMock(
             embeddings=[[float(len(t)) for _ in range(3)] for t in texts]
@@ -101,7 +101,7 @@ def test_parallel_retrieval_propagates_contextvars_to_workers():
     copy per worker via original_ctx.run(copy_context) so that Langfuse @observe
     ContextVar writes (span IDs) in one worker cannot contaminate others.
     """
-    from rag.nodes.retrieval_node import retrieval_node
+    from tamubot.rag.nodes.retrieval_node import retrieval_node
 
     sentinel: contextvars.ContextVar[str] = contextvars.ContextVar("sentinel")
     # A second var that workers WRITE to — used to prove write isolation
@@ -125,8 +125,8 @@ def test_parallel_retrieval_propagates_contextvars_to_workers():
         "retrieval_cache": {},
     }
 
-    with patch("rag.tools.mongo.hybrid_search", side_effect=fake_hybrid_search), \
-         patch("rag.tools.voyage.rerank", side_effect=lambda q, c, top_k, **kw: c[:top_k]):
+    with patch("tamubot.rag.tools.mongo.hybrid_search", side_effect=fake_hybrid_search), \
+         patch("tamubot.rag.tools.voyage.rerank", side_effect=lambda q, c, top_k, **kw: c[:top_k]):
         retrieval_node(state)
 
     # Both workers must have seen the main thread's sentinel value

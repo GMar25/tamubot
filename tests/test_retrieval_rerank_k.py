@@ -14,7 +14,7 @@ import config
 
 def test_hybrid_course_rerank_uses_rerank_k_not_all_chunks():
     """voyage_rerank must be called with rerank_k, not len(all_chunks)."""
-    from rag.nodes.retrieval_node import retrieval_node
+    from tamubot.rag.nodes.retrieval_node import retrieval_node
 
     # 1 course → rerank_k = config.PER_COURSE_K["hybrid_course"]["rerank_k"] * 1
     expected_rerank_k = config.PER_COURSE_K["hybrid_course"]["rerank_k"]
@@ -29,8 +29,8 @@ def test_hybrid_course_rerank_uses_rerank_k_not_all_chunks():
         "retrieval_cache": {},
     }
 
-    with patch("rag.tools.mongo.hybrid_search", return_value=fake_chunks), \
-         patch("rag.tools.voyage.rerank", return_value=fake_chunks[:expected_rerank_k]) as mock_rerank:
+    with patch("tamubot.rag.tools.mongo.hybrid_search", return_value=fake_chunks), \
+         patch("tamubot.rag.tools.voyage.rerank", return_value=fake_chunks[:expected_rerank_k]) as mock_rerank:
         retrieval_node(state)
 
     mock_rerank.assert_called_once()
@@ -46,7 +46,7 @@ def test_hybrid_course_rerank_uses_rerank_k_not_all_chunks():
 
 def test_semantic_general_rerank_uses_rerank_k_not_all_chunks():
     """semantic_general must also apply rerank_k cutoff."""
-    from rag.nodes.retrieval_node import retrieval_node
+    from tamubot.rag.nodes.retrieval_node import retrieval_node
 
     expected_rerank_k = config.PER_COURSE_K["semantic_general"]["rerank_k"]
     fake_chunks = [{"content": f"chunk {i}", "score": 0.9} for i in range(20)]
@@ -59,8 +59,8 @@ def test_semantic_general_rerank_uses_rerank_k_not_all_chunks():
         "retrieval_cache": {},
     }
 
-    with patch("rag.tools.mongo.semantic_search", return_value=fake_chunks), \
-         patch("rag.tools.voyage.rerank", return_value=fake_chunks[:expected_rerank_k]) as mock_rerank:
+    with patch("tamubot.rag.tools.mongo.semantic_search", return_value=fake_chunks), \
+         patch("tamubot.rag.tools.voyage.rerank", return_value=fake_chunks[:expected_rerank_k]) as mock_rerank:
         retrieval_node(state)
 
     mock_rerank.assert_called_once()
@@ -76,7 +76,7 @@ def test_semantic_general_rerank_uses_rerank_k_not_all_chunks():
 
 def test_recursive_retrieval_rerank_uses_rerank_k_not_all_chunks():
     """recursive_retrieval_node must apply rerank_k cutoff."""
-    from rag.nodes.recursive_retrieval_node import recursive_retrieval_node
+    from tamubot.rag.nodes.recursive_retrieval_node import recursive_retrieval_node
 
     expected_rerank_k = config.PER_COURSE_K["recursive"]["rerank_k"]
     fake_chunks = [{"content": f"chunk {i}", "score": 0.9} for i in range(20)]
@@ -89,8 +89,8 @@ def test_recursive_retrieval_rerank_uses_rerank_k_not_all_chunks():
         "retrieval_cache": {},
     }
 
-    with patch("rag.tools.mongo.hybrid_search", return_value=fake_chunks), \
-         patch("rag.tools.voyage.rerank", return_value=fake_chunks[:expected_rerank_k]) as mock_rerank:
+    with patch("tamubot.rag.tools.mongo.hybrid_search", return_value=fake_chunks), \
+         patch("tamubot.rag.tools.voyage.rerank", return_value=fake_chunks[:expected_rerank_k]) as mock_rerank:
         recursive_retrieval_node(state)
 
     mock_rerank.assert_called_once()
@@ -106,7 +106,7 @@ def test_recursive_retrieval_rerank_uses_rerank_k_not_all_chunks():
 
 def test_parallel_multi_course_calls_hybrid_search_once_per_course():
     """With N course IDs, hybrid_search must be called exactly N times in parallel."""
-    from rag.nodes.retrieval_node import retrieval_node
+    from tamubot.rag.nodes.retrieval_node import retrieval_node
 
     course_ids = ["CSCE 638", "CSCE 670", "CSCE 625"]
     fake_chunks_per_course = [{"content": f"chunk {cid}", "score": 0.9, "course_id": cid}
@@ -127,8 +127,8 @@ def test_parallel_multi_course_calls_hybrid_search_once_per_course():
         call_log.append(cid)
         return [{"content": f"result for {cid}", "score": 0.9, "course_id": cid}]
 
-    with patch("rag.tools.mongo.hybrid_search", side_effect=fake_hybrid_search), \
-         patch("rag.tools.voyage.rerank",
+    with patch("tamubot.rag.tools.mongo.hybrid_search", side_effect=fake_hybrid_search), \
+         patch("tamubot.rag.tools.voyage.rerank",
                side_effect=lambda q, c, top_k, **kw: c[:top_k]) as mock_rerank:
         result = retrieval_node(state)
 
@@ -145,7 +145,7 @@ def test_parallel_multi_course_calls_hybrid_search_once_per_course():
 
 def test_parallel_multi_course_handles_partial_failure_gracefully():
     """If one course's search raises, the node should still return results from the others."""
-    from rag.nodes.retrieval_node import retrieval_node
+    from tamubot.rag.nodes.retrieval_node import retrieval_node
 
     good_course = "CSCE 638"
     bad_course = "CSCE 999"  # will raise
@@ -163,8 +163,8 @@ def test_parallel_multi_course_handles_partial_failure_gracefully():
         "retrieval_cache": {},
     }
 
-    with patch("rag.tools.mongo.hybrid_search", side_effect=fake_hybrid_search), \
-         patch("rag.tools.voyage.rerank",
+    with patch("tamubot.rag.tools.mongo.hybrid_search", side_effect=fake_hybrid_search), \
+         patch("tamubot.rag.tools.voyage.rerank",
                side_effect=lambda q, c, top_k, **kw: c[:top_k]):
         result = retrieval_node(state)
 

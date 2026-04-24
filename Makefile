@@ -19,32 +19,32 @@ scrape-simple-syllabus:
 	python tamu_data/scraper/download_simple_syllabus.py
 
 setup-atlas:
-	python -m ingestion_pipeline.setup_atlas
+	python -m tamubot.ingestion.setup_atlas
 
 ingest:
-	python -m ingestion_pipeline.ingest
+	python -m tamubot.ingestion.ingest
 
 ingest-v3:
-	python -m ingestion_pipeline.ingest --v3
+	python -m tamubot.ingestion.ingest --v3
 
 ingest-dept:
-	python -m ingestion_pipeline.ingest --department $(DEPT)
+	python -m tamubot.ingestion.ingest --department $(DEPT)
 
 ingest-corpus:
-	python -m ingestion_pipeline.ingest --v3 --crns-file tamu_data/evals/eval_corpus.json
+	python -m tamubot.ingestion.ingest --v3 --crns-file tamu_data/evals/eval_corpus.json
 
 # --- Dev / Testing ---
 test:
 	pytest tests/ -v
 
 typecheck:
-	mypy rag/ ingestion_pipeline/ evals/ --ignore-missing-imports
+	mypy src/tamubot/ evals/ --ignore-missing-imports
 
 lint:
-	ruff check rag/ ingestion_pipeline/ evals/ app.py config.py
+	ruff check src/tamubot/ evals/ app.py config.py
 
 format:
-	ruff format rag/ ingestion_pipeline/ evals/ app.py config.py
+	ruff format src/tamubot/ evals/ app.py config.py
 
 probe:
 	python evals/run_probe.py --suite smoke
@@ -69,10 +69,12 @@ import-draft:
 	python evals/import_eval_draft.py --draft $(DRAFT) --tag $(or $(TAG),v1)
 
 bench:
-	python evals/run_benchmark.py --golden-set $(GOLDEN) --experiment-name $(EXP)
+	python evals/run_benchmark.py --golden-set $(GOLDEN) --experiment-name $(EXP) \
+		$(if $(CHUNKS_COL),--chunks-collection $(CHUNKS_COL),)
 
 bench-ragas:
-	python evals/run_benchmark.py --golden-set $(GOLDEN) --experiment-name $(EXP) --ragas
+	python evals/run_benchmark.py --golden-set $(GOLDEN) --experiment-name $(EXP) --ragas \
+		$(if $(CHUNKS_COL),--chunks-collection $(CHUNKS_COL),)
 
 eval-chunking:
 	SESSION_CACHE_ENABLED=false python evals/eval_chunking.py \
@@ -83,6 +85,7 @@ eval-chunking:
 		$(if $(THRESHOLD),--threshold $(THRESHOLD),) \
 		$(if $(CHUNK_SIZE),--chunk-size $(CHUNK_SIZE),) \
 		$(if $(CHUNK_OVERLAP),--chunk-overlap $(CHUNK_OVERLAP),) \
+		$(if $(CHUNKS_COL),--chunks-collection $(CHUNKS_COL),) \
 		$(if $(DESC),--description "$(DESC)",) \
 		$(if $(OUTPUT),--output $(OUTPUT),)
 

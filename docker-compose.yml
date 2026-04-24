@@ -13,6 +13,7 @@ services:
     ports:
       - "8501:8501"
     environment:
+      - PYTHONPATH=/workspace:/workspace/src
       - TAMU_BASE_URL=http://api-proxy:8080/tamu
       - VOYAGE_BASE_URL=http://api-proxy:8080/voyage
     depends_on: [api-proxy]

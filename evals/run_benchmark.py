@@ -15,6 +15,7 @@ Output:
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -24,18 +25,38 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+_repo = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _repo)
+sys.path.insert(0, str(Path(_repo) / "src"))
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+# ---------------------------------------------------------------------------
+# Pre-parse --chunks-collection BEFORE rag modules are imported.
+# rag/tools/mongo.py reads CHUNKS_COLLECTION at import time, so env vars
+# must be set here — before the `from tamubot.rag.*` imports below.
+# ---------------------------------------------------------------------------
+def _pre_arg(flag: str) -> "str | None":
+    argv = sys.argv[1:]
+    for i, a in enumerate(argv):
+        if a == flag and i + 1 < len(argv):
+            return argv[i + 1]
+    return None
+
+if _col := _pre_arg("--chunks-collection"):
+    _suffix = _col.removeprefix("chunks_")
+    os.environ.setdefault("CHUNKS_COLLECTION", _col)
+    os.environ.setdefault("VECTOR_INDEX", f"vector_index_{_suffix}")
+    os.environ.setdefault("TEXT_INDEX", f"text_index_{_suffix}")
+
 import config
 from evals.golden_set import append_run_column as _append_run_column
 from evals.golden_set import load as _load_golden_set
-from rag import RouterResult
-from rag.generator import generate_stream
-from rag.graph.pipeline import run_pipeline as run_pipeline_v4
-from rag.observability import (
+from tamubot.rag import RouterResult
+from tamubot.rag.generator import generate_stream
+from tamubot.rag.graph.pipeline import run_pipeline as run_pipeline_v4
+from tamubot.rag.observability import (
     EvalInputs,
     benchmark_config,
     create_trace,
@@ -658,6 +679,9 @@ def main():
                         help="Experiment identifier embedded in output filename (e.g. cs600_ov100)")
     parser.add_argument("--ragas", action="store_true",
                         help="Run RAGAS faithfulness/relevancy scores (~30s per question)")
+    parser.add_argument("--chunks-collection", type=str, default=None,
+                        help="MongoDB chunks collection to query (e.g. 'chunks_eval'). "
+                             "Sets CHUNKS_COLLECTION/VECTOR_INDEX/TEXT_INDEX env vars before rag imports.")
     args = parser.parse_args()
 
     golden_path = Path(args.golden_set)
@@ -667,8 +691,11 @@ def main():
 
     items = _load_golden_set(golden_path)
 
+    from tamubot.rag.tools.mongo import CHUNKS_COLLECTION
+
     print(f"\nBenchmark: {args.experiment_name}")
     print(f"Golden set: {golden_path}  ({len(items)} items)")
+    print(f"Chunks collection: {CHUNKS_COLLECTION}")
     if args.ragas:
         print("RAGAS: enabled")
 
