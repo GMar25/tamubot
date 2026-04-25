@@ -1,9 +1,10 @@
 """Build the RAG LangGraph state machine."""
 from __future__ import annotations
 
+from typing import TypedDict
+
 from langgraph.graph import END, StateGraph
 
-from tamubot.rag.edges.routing import route_after_router
 from tamubot.rag.nodes.generator_node import generator_node
 from tamubot.rag.nodes.out_of_scope_node import out_of_scope_node
 from tamubot.rag.nodes.recursive_retrieval_node import recursive_retrieval_node
@@ -11,6 +12,54 @@ from tamubot.rag.nodes.recursive_router_node import recursive_router_node
 from tamubot.rag.nodes.retrieval_node import retrieval_node
 from tamubot.rag.nodes.router_node import router_node
 from tamubot.rag.state.pipeline_state import PipelineState
+
+# ---------------------------------------------------------------------------
+# Conditional edge dispatcher (inlined from former edges/routing.py)
+# ---------------------------------------------------------------------------
+
+def route_after_router(state: PipelineState) -> str:
+    """Dispatch to retrieval path based on function type."""
+    function = state.get("function", "out_of_scope")
+    if function == "out_of_scope":
+        return "out_of_scope"
+    elif function == "recursive":
+        return "recursive_retrieval"
+    else:
+        return "retrieval"
+
+
+# ---------------------------------------------------------------------------
+# Routing matrix — reference documentation only (not wired to graph routing)
+# ---------------------------------------------------------------------------
+
+class RoutingEntry(TypedDict):
+    requires_retrieval: bool
+    retrieval_passes: list[str]
+    generation_mode: str
+
+
+ROUTING_MATRIX: dict[str, RoutingEntry] = {
+    "out_of_scope": {
+        "requires_retrieval": False,
+        "retrieval_passes": [],
+        "generation_mode": "canned",
+    },
+    "recursive": {
+        "requires_retrieval": True,
+        "retrieval_passes": ["recursive_retrieval", "retrieval"],
+        "generation_mode": "stream",
+    },
+    "hybrid_course": {
+        "requires_retrieval": True,
+        "retrieval_passes": ["hybrid_course"],
+        "generation_mode": "stream",
+    },
+    "semantic_general": {
+        "requires_retrieval": True,
+        "retrieval_passes": ["semantic"],
+        "generation_mode": "stream",
+    },
+}
 
 
 def build_graph():

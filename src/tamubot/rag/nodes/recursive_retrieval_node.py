@@ -2,20 +2,9 @@
 from __future__ import annotations
 
 from tamubot.core import config
-from tamubot.rag.graph.cache_utils import normalize_query
 from tamubot.rag.graph.middleware import error_guard_middleware, timing_middleware
 from tamubot.rag.state.pipeline_state import PipelineState
-
-
-def _compute_dynamic_k(n_courses: int) -> dict:
-    """Compute retrieve_k and rerank_k for recursive path scaled by number of courses."""
-    base_hybrid = config.PER_COURSE_K["hybrid_course"]
-    base_recursive = config.PER_COURSE_K["recursive"]
-    n = max(1, n_courses)
-    return {
-        "retrieve_k": min(base_hybrid["retrieve_k"] * n, config.MAX_RETRIEVE_K),
-        "rerank_k": min(base_recursive["rerank_k"] * n, config.MAX_RERANK_K),
-    }
+from tamubot.rag.utils import compute_dynamic_k_recursive, make_cache_key
 
 
 @timing_middleware
@@ -30,13 +19,13 @@ def recursive_retrieval_node(state: PipelineState) -> dict:
     node_trace = list(state.get("node_trace", []))
     node_trace.append("recursive_retrieval")
 
-    dk = _compute_dynamic_k(len(course_ids))
+    dk = compute_dynamic_k_recursive(len(course_ids))
     retrieve_k = dk["retrieve_k"]
     rerank_k = dk["rerank_k"]
 
     # Cache check
     if config.SESSION_CACHE_ENABLED:
-        cache_key = f"recursive_anchor|{sorted(course_ids)}|{normalize_query(rewritten_query)}"
+        cache_key = make_cache_key("recursive_anchor", course_ids, rewritten_query)
         cached = state.get("retrieval_cache", {}).get(cache_key)
         if cached is not None:
             node_trace.append("retrieval_cache_hit")
@@ -51,7 +40,7 @@ def recursive_retrieval_node(state: PipelineState) -> dict:
 
         retrieval_cache_update = {}
         if config.SESSION_CACHE_ENABLED:
-            cache_key = f"recursive_anchor|{sorted(course_ids)}|{normalize_query(rewritten_query)}"
+            cache_key = make_cache_key("recursive_anchor", course_ids, rewritten_query)
             existing = state.get("retrieval_cache", {})
             retrieval_cache_update = {**existing, cache_key: reranked}
 

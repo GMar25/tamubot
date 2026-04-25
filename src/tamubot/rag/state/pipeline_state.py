@@ -5,19 +5,9 @@ these typed fields; no other shared state exists.
 """
 from __future__ import annotations
 
-import re
 from typing import Optional
 
 from typing_extensions import TypedDict
-
-
-def normalize_course_id(raw: str) -> str:
-    """Normalize 'csce638' → 'CSCE 638'."""
-    raw = raw.strip().upper().replace("-", " ")
-    match = re.match(r"^([A-Z]+)\s*(\d+.*)$", raw)
-    if match:
-        return f"{match.group(1)} {match.group(2)}"
-    return raw
 
 
 class ConversationMessage(TypedDict, total=False):

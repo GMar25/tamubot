@@ -1,20 +1,9 @@
-"""Custom exceptions for the v4 pipeline.
+"""Backward-compat shim — exceptions moved to tamubot.rag.graph.middleware."""
+from tamubot.rag.graph.middleware import (
+    V4GenerationError,
+    V4PipelineError,
+    V4RetrievalError,
+    V4RouterError,
+)
 
-Canonical location: rag/graph/exceptions.py
-"""
-
-
-class V4PipelineError(Exception):
-    """Base exception for v4 pipeline errors."""
-
-
-class V4RouterError(V4PipelineError):
-    """Raised when the router node fails to classify a query."""
-
-
-class V4RetrievalError(V4PipelineError):
-    """Raised when retrieval fails."""
-
-
-class V4GenerationError(V4PipelineError):
-    """Raised when generation fails."""
+__all__ = ["V4PipelineError", "V4RouterError", "V4RetrievalError", "V4GenerationError"]

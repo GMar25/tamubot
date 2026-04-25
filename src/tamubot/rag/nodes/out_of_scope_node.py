@@ -14,13 +14,7 @@ from tamubot.rag.graph.middleware import error_guard_middleware, timing_middlewa
 from tamubot.rag.prompts import OUT_OF_SCOPE_SYSTEM
 from tamubot.rag.state.pipeline_state import PipelineState
 from tamubot.rag.tools.llm import stream_llm
-
-# Fallback canned response if LLM call fails
-_OOS_FALLBACK = (
-    "Howdy! I'm TamuBot, your Texas A&M academic assistant. "
-    "I can help with questions about courses, syllabi, grading policies, "
-    "schedules, and university policies. What would you like to know?"
-)
+from tamubot.rag.utils import OOS_FALLBACK as _OOS_FALLBACK
 
 
 @observe(as_type="generation", name="pipeline.out_of_scope")

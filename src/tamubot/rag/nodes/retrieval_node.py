@@ -6,25 +6,14 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from tamubot.core import config
-from tamubot.rag.graph.cache_utils import normalize_query
 from tamubot.rag.graph.middleware import error_guard_middleware, timing_middleware
 from tamubot.rag.state.pipeline_state import PipelineState
-
-
-def _compute_dynamic_k(function: str, n_courses: int) -> dict[str, int]:
-    """Compute retrieve_k scaled by number of courses."""
-    base = config.PER_COURSE_K[function]
-    if function == "semantic_general":
-        return dict(base)
-    n = max(1, n_courses)
-    return {
-        "retrieve_k": min(base["retrieve_k"] * n, config.MAX_RETRIEVE_K),
-        "rerank_k": min(base["rerank_k"] * n, config.MAX_RERANK_K),
-    }
+from tamubot.rag.utils import compute_dynamic_k, make_cache_key
 
 
 def _make_retrieval_cache_key(function, course_ids, rewritten_query, eval_query=None):
-    return f"{sorted(course_ids)}|{normalize_query(rewritten_query)}"
+    """Backward-compat shim — use make_cache_key() directly."""
+    return make_cache_key("retrieval", course_ids, rewritten_query)
 
 
 @timing_middleware
@@ -40,14 +29,14 @@ def retrieval_node(state: PipelineState) -> dict:
     node_trace = list(state.get("node_trace", []))
     node_trace.append("retrieval")
 
-    dk = _compute_dynamic_k(function, len(course_ids))
+    dk = compute_dynamic_k(function, len(course_ids))
     retrieve_k = dk["retrieve_k"]
     rerank_k = dk["rerank_k"]
     apply_knee = not state.get("recursive_search", False)
 
     # Cache check — skip retrieval on exact-match hit
     if config.SESSION_CACHE_ENABLED:
-        cache_key = _make_retrieval_cache_key(function, course_ids, rewritten_query)
+        cache_key = make_cache_key("retrieval", course_ids, rewritten_query)
         cached_chunks = state.get("retrieval_cache", {}).get(cache_key)
         if cached_chunks is not None:
             node_trace.append("retrieval_cache_hit")
@@ -102,7 +91,7 @@ def retrieval_node(state: PipelineState) -> dict:
 
             retrieval_cache_update = {}
             if config.SESSION_CACHE_ENABLED:
-                cache_key = _make_retrieval_cache_key(function, course_ids, rewritten_query)
+                cache_key = make_cache_key("retrieval", course_ids, rewritten_query)
                 existing_cache = state.get("retrieval_cache", {})
                 retrieval_cache_update = {**existing_cache, cache_key: reranked}
 
@@ -123,7 +112,7 @@ def retrieval_node(state: PipelineState) -> dict:
 
             retrieval_cache_update = {}
             if config.SESSION_CACHE_ENABLED:
-                cache_key = _make_retrieval_cache_key(function, course_ids, rewritten_query)
+                cache_key = make_cache_key("retrieval", course_ids, rewritten_query)
                 existing_cache = state.get("retrieval_cache", {})
                 retrieval_cache_update = {**existing_cache, cache_key: reranked}
 

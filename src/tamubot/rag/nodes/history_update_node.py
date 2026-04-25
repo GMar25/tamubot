@@ -59,7 +59,7 @@ def history_update_node(state: PipelineState) -> dict:
     # answer cache
     answer_cache_update = {}
     if config.SESSION_CACHE_ENABLED and query and answer:
-        from tamubot.rag.graph.cache_utils import normalize_query
+        from tamubot.rag.utils import normalize_query
         existing_cache = state.get("answer_cache", {})
         answer_cache_update = {**existing_cache, normalize_query(query): answer}
 

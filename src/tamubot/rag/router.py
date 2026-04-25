@@ -8,7 +8,6 @@ mechanically from the extracted variables — there is no intent classification 
 """
 
 import json
-import re
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -18,27 +17,7 @@ from langfuse import observe
 from tamubot.core import config
 from tamubot.rag.prompts import ROUTER_PROMPT
 from tamubot.rag.tools.llm import call_llm
-
-# ---------------------------------------------------------------------------
-# Dynamic-k helper (pure Python, no LLM)
-# ---------------------------------------------------------------------------
-
-def compute_dynamic_k(function: str, n_courses: int) -> dict[str, int]:
-    """Compute retrieve_k and rerank_k scaled by the number of courses in the query.
-
-    semantic_general is corpus-wide — do not scale by course count.
-    All other functions multiply their per-course base by n_courses, capped at the
-    global maximums to avoid over-retrieving.
-    """
-    base = config.PER_COURSE_K[function]
-    if function == "semantic_general":
-        return dict(base)  # fixed, not scaled
-    n = max(1, n_courses)
-    return {
-        "retrieve_k": min(base["retrieve_k"] * n, config.MAX_RETRIEVE_K),
-        "rerank_k": min(base["rerank_k"] * n, config.MAX_RERANK_K),
-    }
-
+from tamubot.rag.utils import compute_dynamic_k, normalize_course_id  # noqa: F401 (re-exported)
 
 # ---------------------------------------------------------------------------
 # Derivation helpers (pure Python, no LLM)
@@ -116,13 +95,7 @@ class RouterResult:
         return bool(self.course_ids) or self.intent_type is not None
 
 
-def _normalize_course_id(raw: str) -> str:
-    """Normalize a course ID like 'csce638' → 'CSCE 638'."""
-    raw = raw.strip().upper().replace("-", " ")
-    match = re.match(r"^([A-Z]+)\s*(\d+.*)$", raw)
-    if match:
-        return f"{match.group(1)} {match.group(2)}"
-    return raw
+_normalize_course_id = normalize_course_id  # backward-compat alias
 
 
 # ---------------------------------------------------------------------------

@@ -19,6 +19,7 @@ from tamubot.rag.prompts import (
 )
 from tamubot.rag.tools.context import collapse_whitespace, format_context_xml
 from tamubot.rag.tools.llm import call_llm, stream_llm
+from tamubot.rag.utils import OOS_FALLBACK as _OUT_OF_SCOPE_RESPONSE
 
 # ---------------------------------------------------------------------------
 # Function-adaptive system prompt assembly
@@ -90,11 +91,7 @@ def generate(
     """
     # out_of_scope gets a canned response without an LLM call
     if function == "out_of_scope":
-        return (
-            "Howdy! I'm TamuBot, your Texas A&M academic assistant. "
-            "I can help you with questions about courses, syllabi, grading policies, "
-            "schedules, and university policies. What would you like to know?"
-        )
+        return _OUT_OF_SCOPE_RESPONSE
 
     # Route multi-course known-course queries to streaming comparison.
     # Recursive queries may have multiple anchor course IDs but need pairing framing, not comparison.
@@ -214,12 +211,6 @@ def generate_comparison(
 # ---------------------------------------------------------------------------
 # Streaming generation
 # ---------------------------------------------------------------------------
-
-_OUT_OF_SCOPE_RESPONSE = (
-    "Howdy! I'm TamuBot, your Texas A&M academic assistant. "
-    "I can help you with questions about courses, syllabi, grading policies, "
-    "schedules, and university policies. What would you like to know?"
-)
 
 
 @observe(as_type="generation", name="pipeline.generator")
