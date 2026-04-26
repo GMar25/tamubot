@@ -3,7 +3,7 @@
 Validates routing AND the generated answer text for each turn.
 
 Run inside the project root:
-  python -m tamubot.tools.test_coreference
+  python -m pytest tests/test_e2e_coreference.py
 
 Makes ~6 TAMU API calls and ~6 Voyage AI calls.
 """

@@ -1,7 +1,7 @@
 """Verify mem0/cache integration: run the same query twice, check for cache hits.
 
 Usage:
-    python -m tamubot.tools.verify_mem0_cache
+    python -m pytest tests/test_e2e_verify_mem0_cache.py
 """
 from __future__ import annotations
 

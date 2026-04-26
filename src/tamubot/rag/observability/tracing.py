@@ -25,7 +25,7 @@ def get_langfuse():
     """Lazy singleton. Returns None if Langfuse credentials are not configured."""
     global _langfuse_client
     if _langfuse_client is None:
-        import config
+        from tamubot.core import config
 
         if not (config.LANGFUSE_PUBLIC_KEY and config.LANGFUSE_SECRET_KEY):
             return None

@@ -83,7 +83,7 @@ def test_history_update_compression_triggered_at_max_turns():
     """When history exceeds MAX_HISTORY_TURNS * 2 messages, compression truncates."""
     from unittest.mock import patch
 
-    import config
+    from tamubot.core import config
     from tamubot.rag.nodes.history_update_node import history_update_node
 
     # Build history longer than the limit

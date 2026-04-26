@@ -70,4 +70,6 @@ Thumbs.db
 # Playwright MCP logs
 .playwright-mcp/
 .worktrees/
-.worktrees/
+
+# One-off test scripts
+test_hooks.sh

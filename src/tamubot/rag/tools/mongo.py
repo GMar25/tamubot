@@ -2,7 +2,7 @@
 
 Exposes:
   hybrid_search(query, course_id, k) -> list[dict]
-  semantic_search(query, k) -> list[dict]
+  semantic_search(query, k) -> list[dict]   (hybrid: vector + BM25)
   fetch_anchor_chunks(course_ids) -> (list[dict], list[tuple[str,str]], bool)
   get_meeting_times(course_ids) -> dict[str, Any]
   get_syllabus_urls(course_ids) -> dict[str, str]
@@ -10,6 +10,7 @@ Exposes:
 
 Canonical location: rag/tools/mongo.py
 """
+
 from __future__ import annotations
 
 import os
@@ -38,11 +39,19 @@ def _get_db():
 
 
 def _projection() -> dict:
-    return {"$project": {
-        "course_id": 1, "chunk_index": 1, "content": 1,
-        "header_text": 1, "anchor": 1, "section": 1, "term": 1, "score": 1,
-        "category": 1,
-    }}
+    return {
+        "$project": {
+            "course_id": 1,
+            "chunk_index": 1,
+            "content": 1,
+            "header_text": 1,
+            "anchor": 1,
+            "section": 1,
+            "term": 1,
+            "score": 1,
+            "category": 1,
+        }
+    }
 
 
 def _atlas_filter(course_id: str | None, term: str | None) -> dict | None:
@@ -104,6 +113,7 @@ def _rrf_fuse(result_lists: list[list[dict]], k: int = 60) -> list[dict]:
 def hybrid_search(query: str, course_id: str, k: int) -> list[dict]:
     """RRF hybrid search (vector + BM25) filtered to one course."""
     from tamubot.rag.tools.voyage import embed_query
+
     db = _get_db()
     emb = embed_query(query)
     atlas_f = _atlas_filter(course_id, None)
@@ -129,16 +139,26 @@ def hybrid_search(query: str, course_id: str, k: int) -> list[dict]:
 
 @observe(name="pipeline.retrieval.search.semantic")
 def semantic_search(query: str, k: int) -> list[dict]:
-    """Corpus-wide semantic vector search."""
+    """Corpus-wide hybrid search (vector + BM25)."""
     from tamubot.rag.tools.voyage import embed_query
+
     db = _get_db()
     emb = embed_query(query)
-    pipeline = [
+    vector_pipeline = [
         _build_vector_stage(emb, k, filters=None),
         {"$addFields": {"score": {"$meta": "vectorSearchScore"}}},
         _projection(),
     ]
-    results = list(db[CHUNKS_COLLECTION].aggregate(pipeline))
+    text_pipeline = _build_text_stage(query, k, course_id=None)
+    try:
+        vector_results = list(db[CHUNKS_COLLECTION].aggregate(vector_pipeline))
+    except Exception:
+        vector_results = []
+    try:
+        text_results = list(db[CHUNKS_COLLECTION].aggregate(text_pipeline))
+    except Exception:
+        text_results = []
+    results = _rrf_fuse([vector_results, text_results])[:k]
     for r in results:
         r.pop("_id", None)
     return results
@@ -240,8 +260,7 @@ def get_syllabus_urls(course_ids: list[str]) -> dict[str, str]:
 def get_missing_sections(course_id: str) -> list[str]:
     """Return section names missing from course_id chunks."""
     db = _get_db()
-    present = set(
-        db[CHUNKS_COLLECTION].distinct("section", {"course_id": course_id})
-    )
+    present = set(db[CHUNKS_COLLECTION].distinct("section", {"course_id": course_id}))
     from tamubot.rag.models import VALID_CATEGORIES
+
     return [s for s in VALID_CATEGORIES if s not in present]
