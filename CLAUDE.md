@@ -1,14 +1,10 @@
-# CLAUDE.md
+# CLAUDE.md — TamuBot
 
-> Module-level detail: `src/tamubot/rag/CLAUDE.md`, `src/tamubot/ingestion/CLAUDE.md`, `src/tamubot/evals/CLAUDE.md`
+RAG chatbot for Texas A&M course/policy info. Module-level detail: `src/tamubot/rag/CLAUDE.md`, `src/tamubot/ingestion/CLAUDE.md`, `src/tamubot/evals/CLAUDE.md`
 
 ## Environment
 
-Claude Code runs **inside** the Docker container (`tamubot-dev-1`). Docker is not available inside the container. Python packages are installed system-wide (no `.venv`).
-
-Host-side commands (run from Windows Powershell, not from Claude): `make sandbox-up | sandbox-down | sandbox-shell | agent`
-
-Docs: `docs/DOCKER_SETUP.md` (Windows 11 WSL2 + Mac) | `docs/API_SAFETY.md` (proxy + rate limits)
+Claude Code runs **inside** Docker container `tamubot-dev-1`. No Docker-in-Docker. Python packages installed system-wide (no `.venv`).
 
 ## Commands
 
@@ -17,25 +13,8 @@ streamlit run src/tamubot/app/streamlit.py --server.headless true  # start app (
 make test | lint | typecheck | format | probe | probe-full
 ```
 
-
 ## Gotchas
-- **Skills**: discovery uses `~/.claude/skills/<name>/SKILL.md`, not project-level `.claude/skills/*.md`. If a skill doesn't appear, check for broken symlinks in `~/.claude/skills/` — fix from Windows PowerShell, not from inside the container
+
 - **Config**: always `from tamubot.core import config` — never `os.getenv()` directly.
-- **TAMU AI gateway** (`TAMU_API_KEY` set → `USE_TAMU_API=True`): always returns SSE regardless of `stream` param → ALL calls must use `stream=True` + `"".join(chunk.choices[0].delta.content or "" for chunk in stream)`. Base URL: `https://chat-api.tamu.ai/openai` (no `/v1`). Min `max_tokens=4096` or response is empty.
-
-## Skills — Auto-Engage
-
-Invoke via the Skill tool automatically (no `/` command needed) when intent matches:
-
-- **probe-rag**: user asks to test a query, run a probe, check RAG output, or inspect a Langfuse trace
-- **scrape**: user asks to scrape a site, download syllabi, or add/run a crawler
-- **chunk-syllabi**: user asks to re-chunk syllabi, run chunking experiments, or inspect token-level chunk output
-- **run-eval**: user asks to run eval, run benchmark, benchmark the pipeline, benchmark RAG, or run chunking eval
-- **golden-set**: user asks to create, generate, refine, or export a golden set / eval set
-- **server-ops**: user says "restart localhost/server/app", "start/stop server", "kill the server", "server status", "clear cache", or any variant of managing the local dev server
-- **task-budget**: any task involving TAMU API, Voyage AI, or Google AI calls (RAG queries, probes, ingestion, benchmarks)
-- **research-prompts**: user asks to generate or write a research prompt
-- **langfuse**: user asks about Langfuse traces, scores, prompts, datasets, sessions, instrumentation, SDK usage, or Langfuse documentation
-
-When skill tool engaged, make sure to notify user!
+- **Skills**: discovery uses `~/.claude/skills/<name>/SKILL.md`, not project-level `.claude/skills/*.md`. If a skill doesn't appear, check for broken symlinks — fix from Windows PowerShell, not inside the container.
 

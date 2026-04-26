@@ -1,36 +1,17 @@
-# tamubot.ingestion (formerly ingestion_pipeline/)
+# tamubot.ingestion
 
-## CBD Rationale
+## Contract
 
-`tamubot.ingestion` is the **producer**; `tamubot.rag.models` is the **contract** it implements. Import schema models from `tamubot.rag.models`, never define them here.
+Producer for `tamubot.rag.models` — import schema models from there, never define them here.
 
-## Running (V3 pipeline)
+## Pipeline
 
-```bash
-python src/tamubot/ingestion/process_syllabi_v3.py --pilot
-python src/tamubot/ingestion/process_syllabi_v3.py --pdf tamu_data/raw/simple_syllabus_20260305/<file>.pdf [--new-run] [--force]
-python src/tamubot/ingestion/process_syllabi_v3.py --department CSCE
-python -m tamubot.ingestion.ingest [--department CSCE] [--dry-run]
-```
+Full run: `make scrape-catalog && make scrape-classes` → `process_syllabi_v3.py --department CSCE` → `setup_atlas` → `ingest`. **Always run all steps together** — `--step N` is for debugging only, partial runs leave downstream stale.
 
-Full pipeline (always from repo root):
-```bash
-make scrape-catalog
-make scrape-classes
-python src/tamubot/ingestion/process_syllabi_v3.py --department CSCE
-python -m tamubot.ingestion.setup_atlas
-python -m tamubot.ingestion.ingest [--department CSCE] [--dry-run]
-python -m tamubot.ingestion.ingest --crns-file tamu_data/evals/eval_corpus.json  # corpus only
-```
-Reset catalog crawl: delete `tamu_data/scraper/logs/progress_log.txt` (created at runtime by Scrapy pipeline)
-
-**Always run all steps (0–3) together.** `--step N` is for debugging only — partial runs leave downstream outputs stale.
+Reset catalog crawl: delete `tamu_data/scraper/logs/progress_log.txt`.
 
 ## Gotchas
 
-- **Uses TAMU gateway** for step 3 LLM calls (`config.get_tamu_client()`). PyMuPDF extracts PDFs directly — no `Part.from_bytes`.
-- **`\ufffd` chars**: PyMuPDF emits U+FFFD for un-decodable bytes. `clean_replacement_chars()` replaces with `-` post-parse.
-- **Boilerplate registry** (`boilerplate_stripper.py`): font-annotated headers matched by `BOILERPLATE_REGISTRY`; body-size headers matched by `BODY_BOILERPLATE_HEADERS` + `strip_body_level_boilerplate()`. Only add long, unambiguous phrases to body list.
-- **`_BP_KEYWORDS`** in `process_syllabi_v3.py`: flags non-stripped headers as new candidates → `new_bp_candidates` column in combined log. Expand when new boilerplate patterns emerge.
-- **Legacy `process_syllabi.py`**: not used in v3. Still functional for Gemini semantic extraction if needed.
-
+- **U+FFFD chars**: PyMuPDF emits replacement chars for un-decodable bytes. `clean_replacement_chars()` handles post-parse.
+- **Boilerplate registry** (`boilerplate_stripper.py`): font-annotated headers → `BOILERPLATE_REGISTRY`; body-size → `BODY_BOILERPLATE_HEADERS`. Only add long, unambiguous phrases to body list.
+- **`_BP_KEYWORDS`** in `process_syllabi_v3.py`: flags non-stripped headers as new candidates → `new_bp_candidates` column. Expand when new patterns emerge.
