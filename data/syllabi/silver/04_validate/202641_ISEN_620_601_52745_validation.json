@@ -1,0 +1,27 @@
+{
+  "file_stem": "202641_ISEN_620_601_52745",
+  "findings": {
+    "content_preservation": [],
+    "strip_completeness": [],
+    "structural_coherence": [
+      "Textbook information ('Operations Research Authors: Wayne L. Winston, Jeffrey B. Goldberg') is incorrectly placed under '#### Grading' instead of '## Textbook and/or Resource Materials'.",
+      "Redundant header '#### Course Specific Late Work Policy' immediately follows '#### Late Work Policy'.",
+      "Redundant headers '##### Course Schedule' appear twice immediately after '#### Course Schedule'.",
+      "The 'Course Schedule' table is split into two separate tables with repeated headers ('Unit # Title'), instead of being a single continuous table."
+    ],
+    "metadata_accuracy": []
+  },
+  "timing_s": 23.9,
+  "proposals": {
+    "new_false_positives": [
+      "#### Course Specific Late Work Policy",
+      "##### Course Schedule"
+    ],
+    "new_boilerplate": [],
+    "text_cleanups": [
+      "&gt;",
+      "&lt;"
+    ],
+    "reasoning": "The header '#### Course Specific Late Work Policy' is redundant as it immediately follows '#### Late Work Policy' and should be integrated or demoted. The header '##### Course Schedule' appears redundantly twice, indicating a parsing error that created duplicate sub-headers. The HTML entities '&gt;' and '&lt;' should be converted to their corresponding characters for clean text output. No institutional boilerplate sections were confidently identified based on the provided document alone."
+  }
+}

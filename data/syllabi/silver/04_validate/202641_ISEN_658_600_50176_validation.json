@@ -1,0 +1,25 @@
+{
+  "file_stem": "202641_ISEN_658_600_50176",
+  "findings": {
+    "content_preservation": [],
+    "strip_completeness": [],
+    "structural_coherence": [
+      "Redundant header: '### Course schedule' immediately follows '## Course Schedule'.",
+      "The Course Schedule content, which appears to be a table, has lost its tabular structure. 'Topics' and 'Timeline' headers are repeated, and the data is flattened into a list rather than aligned columns."
+    ],
+    "metadata_accuracy": []
+  },
+  "timing_s": 15.0,
+  "proposals": {
+    "new_false_positives": [
+      "### Course schedule",
+      "Topics",
+      "Timeline"
+    ],
+    "new_boilerplate": [],
+    "text_cleanups": [
+      "&lt;"
+    ],
+    "reasoning": "The header '### Course schedule' is redundant as it immediately follows '## Course Schedule'. 'Topics' and 'Timeline' are column headers within the course schedule content, not true section headers, and are repeated due to parsing issues. The HTML entity '&lt;' should be replaced with '<' for proper rendering."
+  }
+}

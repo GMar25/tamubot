@@ -1,0 +1,24 @@
+{
+  "file_stem": "202641_ISEN_640_700_20022",
+  "findings": {
+    "content_preservation": [],
+    "strip_completeness": [],
+    "structural_coherence": [
+      "The 'Course Schedule' section is not formatted as a markdown table; it appears as plain text with headers and data separated by newlines.",
+      "The line 'Section 700 (20022) Systems Thinking and Analysis Fall 2026 - College Station' is unformatted text directly following the main course title, not integrated into a proper heading or metadata structure."
+    ],
+    "metadata_accuracy": [
+      "The 'Meeting Days' field is present but its value is missing."
+    ]
+  },
+  "timing_s": 36.17,
+  "proposals": {
+    "new_false_positives": [],
+    "new_boilerplate": [],
+    "text_cleanups": [
+      "This material Is: ",
+      "See Lecture Refs"
+    ],
+    "reasoning": "The phrase 'This material Is: ' is an awkward and redundant prefix to the actual content about textbooks, and its removal improves conciseness. 'See Lecture Refs' is a generic placeholder that appears repeatedly in the 'Reading' column of the course schedule; it does not provide specific, actionable information and can be removed to clean up the output. No clear false positive headers or university-wide boilerplate text were identified based on the provided document and strict definitions."
+  }
+}

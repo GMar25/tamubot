@@ -1,0 +1,27 @@
+{
+  "file_stem": "202611_ISEN_632_700_59783",
+  "findings": {
+    "content_preservation": [],
+    "strip_completeness": [],
+    "structural_coherence": [
+      "The header 'Biography' is incorrectly merged with the 'Webpage' URL line under 'Instructor Details'.",
+      "The sub-header '### Grading Policy' is redundant, appearing directly after the main header '## Grading Policy'.",
+      "The text 'A detailed course schedule... is provided in Appendix A' is misleading, as the schedule content is presented inline rather than in a separate appendix."
+    ],
+    "metadata_accuracy": []
+  },
+  "timing_s": 0.56,
+  "proposals": {
+    "new_false_positives": [
+      "Webpage: https://safe.engr.tamu.edu Biography",
+      "### Grading Policy"
+    ],
+    "new_boilerplate": [],
+    "text_cleanups": [
+      "is provided in Appendix A",
+      "|",
+      "* Design competitions"
+    ],
+    "reasoning": "The line 'Webpage: https://safe.engr.tamu.edu Biography' is incorrectly identified as a header; 'Biography' is content, not a header, and the entire line should be demoted. The sub-header '### Grading Policy' is redundant, appearing immediately after the main '## Grading Policy' header. The phrase 'is provided in Appendix A' is misleading as the schedule is inline, not in an appendix. The pipe character '|' is an extraneous separator in the quiz schedule table, likely a parsing artifact. The text '* Design competitions' is a footnote-like comment under the homework assignments table that should be removed."
+  }
+}

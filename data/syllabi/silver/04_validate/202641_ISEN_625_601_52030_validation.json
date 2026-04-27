@@ -1,0 +1,20 @@
+{
+  "file_stem": "202641_ISEN_625_601_52030",
+  "findings": {
+    "content_preservation": [],
+    "strip_completeness": [],
+    "structural_coherence": [
+      "The '### Weekly Topics' header appears mid-way through the 'Course Schedule' section, disrupting the flow and acting as an orphaned header."
+    ],
+    "metadata_accuracy": []
+  },
+  "timing_s": 10.39,
+  "proposals": {
+    "new_false_positives": [
+      "Weekly Topics"
+    ],
+    "new_boilerplate": [],
+    "text_cleanups": [],
+    "reasoning": "The 'Weekly Topics' header appears mid-way through the 'Course Schedule' section, acting as a redundant label for the continuation of the schedule rather than a distinct section. It should be demoted to body text or removed to maintain proper document flow."
+  }
+}

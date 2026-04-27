@@ -4,7 +4,7 @@ RAG chatbot for Texas A&M course/policy info. Module-level detail: `src/tamubot/
 
 ## Environment
 
-Claude Code runs **inside** Docker container `tamubot-dev-1`. No Docker-in-Docker. Python packages installed system-wide (no `.venv`).
+Claude Code runs **inside** Docker container `tamubot-dev-1`. No Docker-in-Docker. Python packages installed container-wide (no `.venv`).
 
 ## Commands
 

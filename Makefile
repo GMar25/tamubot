@@ -1,7 +1,7 @@
 .PHONY: run scrape-catalog scrape-classes scrape-simple-syllabus setup-atlas ingest ingest-dept \
         ingest-corpus test typecheck lint format probe probe-v3 probe-full \
         eval-draft import-draft bench bench-ragas test-v4 probe-v4 \
-        eval-chunking sandbox-up sandbox-down sandbox-shell agent
+        eval-chunking ragas-testset sandbox-up sandbox-down sandbox-shell agent
 
 # --- App ---
 run:
@@ -62,6 +62,9 @@ probe-v4:
 	python -m tamubot.evals.run_probe --suite smoke
 
 # --- Benchmarking ---
+ragas-testset:  ## Generate RAGAS testset from eval corpus
+	python -m tamubot.evals.generate_ragas_testset --corpus-dir $(CORPUS_DIR) $(ARGS)
+
 eval-draft:
 	python -m tamubot.evals.generate_eval_draft --n 60
 

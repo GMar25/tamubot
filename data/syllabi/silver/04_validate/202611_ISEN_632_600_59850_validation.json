@@ -1,0 +1,30 @@
+{
+  "file_stem": "202611_ISEN_632_600_59850",
+  "findings": {
+    "content_preservation": [
+      "The last Course Learning Outcome is incomplete/truncated.",
+      "The document states that a detailed course schedule is provided in \"Appendix A\", but \"Appendix A\" is missing from the document."
+    ],
+    "strip_completeness": [],
+    "structural_coherence": [
+      "The header \"Webpage: https://safe.engr.tamu.edu Biography\" is malformed; it combines a URL with a section title.",
+      "A \"URL for Resource\" entry is incorrectly placed under the \"Lecture Activities\" sub-section within the \"Grading Policy\" section. It appears to be a resource material, not part of the lecture activities description.",
+      "The header \"### Grading Policy\" is duplicated.",
+      "In the \"Detailed course schedule\" table, several entries in the \"Subject\" column contain an extraneous pipe character ('|'), e.g., \"Quiz 1 | Spaceflight-associated neurovestibular effects\", which incorrectly suggests a column break."
+    ],
+    "metadata_accuracy": []
+  },
+  "timing_s": 0.45,
+  "proposals": {
+    "new_false_positives": [
+      "Webpage: https://safe.engr.tamu.edu Biography",
+      "URL for Resource"
+    ],
+    "new_boilerplate": [],
+    "text_cleanups": [
+      "### Grading Policy",
+      "| "
+    ],
+    "reasoning": "The header 'Webpage: https://safe.engr.tamu.edu Biography' is malformed and combines a URL with a descriptive label, making it unsuitable as a standalone header. 'URL for Resource' appears as a label within a sub-section, not a true header. The second occurrence of '### Grading Policy' is a duplicate and should be removed. The pipe character '| ' in the 'Detailed course schedule' table's 'Subject' column is an extraneous artifact that should be removed."
+  }
+}

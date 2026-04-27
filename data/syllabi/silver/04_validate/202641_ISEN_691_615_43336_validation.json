@@ -1,0 +1,29 @@
+{
+  "file_stem": "202641_ISEN_691_615_43336",
+  "findings": {
+    "content_preservation": [
+      "The list of specific Course Learning Outcomes is missing from the 'Course Learning Outcomes' section."
+    ],
+    "strip_completeness": [],
+    "structural_coherence": [],
+    "metadata_accuracy": [
+      "Meeting Days field is present but its value is empty."
+    ]
+  },
+  "timing_s": 12.29,
+  "proposals": {
+    "new_false_positives": [
+      "Section 615 (43336) Research Fall 2026 - College Station",
+      "Meeting Times:",
+      "Credit Hours:",
+      "Yan Li",
+      "Email:",
+      "Office Location:",
+      "Phone:",
+      "Office Hours"
+    ],
+    "new_boilerplate": [],
+    "text_cleanups": [],
+    "reasoning": "The identified 'new_false_positives' are either course metadata, instructor details, or labels for specific information (e.g., 'Meeting Times:', 'Credit Hours:', 'Email:') that have been incorrectly parsed as section headers. They should be demoted to body text as they do not introduce new sections. No institutional boilerplate or general text cleanups were identified based on the provided document and rules."
+  }
+}

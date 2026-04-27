@@ -1,0 +1,48 @@
+{
+  "file_stem": "202641_ISEN_614_600_65054",
+  "findings": {
+    "content_preservation": [],
+    "strip_completeness": [],
+    "structural_coherence": [
+      "In the 'Course Prerequisites' section, the list item '3. Knowledge on hypothesis test and linear regression...' is incorrectly numbered or orphaned, implying missing items 1 and 2.",
+      "The 'Late Work Policy' and 'Course Specific Late Work Policy' sections are identical, indicating redundancy or an error in content."
+    ],
+    "metadata_accuracy": [
+      "Instructor name is missing.",
+      "Instructor email is missing.",
+      "Instructor office hours are missing.",
+      "Instructor office location is missing."
+    ]
+  },
+  "timing_s": 18.6,
+  "proposals": {
+    "new_false_positives": [
+      "Section 600 (65054) Advanced Quality Control",
+      "Fall 2026 - College Station",
+      "Meeting Times:",
+      "Meeting Type: LEC",
+      "Meeting Days: TR",
+      "Start Time: 09:35AM",
+      "End Time: 10:50AM",
+      "Start Date: 08/24/2026",
+      "End Date: 12/10/2026",
+      "Meeting Location:",
+      "ETB 2026",
+      "Credit Hours:",
+      "3",
+      "Prerequisite/Corequisite(s):",
+      "Basically, following knowledge is necessary",
+      "This material Is: Optional",
+      "Authors:",
+      "Weeks",
+      "Topic",
+      "### Course recordings will not be provided to the students in section 600 .",
+      "Statistics Capable (hand-held) Calculator: (Ex. TI 84 Plus, TI 89, Nspire, etc.) is required.",
+      "Software : Matlab (or equivalent programming language, such as R, Python , EXCEL, and Minitab.",
+      "Course Materials & Copyright:"
+    ],
+    "new_boilerplate": [],
+    "text_cleanups": [],
+    "reasoning": "The proposed false positives are either short labels, descriptive text, or elements of a list/table that were incorrectly identified as section headers by the parser. They do not represent distinct, top-level sections of the syllabus. No new boilerplate or text cleanups were identified based on the provided rules and document content."
+  }
+}

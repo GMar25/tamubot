@@ -32,6 +32,8 @@ BOILERPLATE_REGISTRY: dict[str, list[str]] = {
         "college of engineering",
         "computer science and engineering",
         "industrial and systems engineering",
+        "college of engineering industrial and systems engineering",
+        "college of engineering computer science and engineering",
         "texas a&m at galveston",
     ],
     # Standard TAMU-wide legal/policy sections (100% verbatim across all files)
@@ -40,7 +42,7 @@ BOILERPLATE_REGISTRY: dict[str, list[str]] = {
         "academic integrity statement and policy",
         "academic integrity statements and policy",  # plural variant seen in some PDFs
         "notice of nondiscrimination",
-        "non-discrimination policy",                 # alternate phrasing (3+ files)
+        "non-discrimination policy",  # alternate phrasing (3+ files)
         "civil rights, free speech, and title ix policies",
         "americans with disabilities act (ada) policy",
         "pregnancy accommodations",
@@ -50,14 +52,18 @@ BOILERPLATE_REGISTRY: dict[str, list[str]] = {
         "statement on the family educational rights and privacy act",  # no trailing (ferpa)
         "statement on the family educational rights and",
         "privacy act (ferpa)",
-        "(ferpa)",                                   # orphaned second wrap line
+        "(ferpa)",  # orphaned second wrap line
         "free speech and civil discourse",
         "additional university policies for galveston campus",
         "additional university policies for the galveston campus",  # "the" variant
         "college and department policies",
         "university attendance policy",
         "makeup work policy",
-        "course evaluation",             # HelioCampus eval boilerplate
+        "course evaluation",  # HelioCampus eval boilerplate
+        "ai statement",  # Institutional AI-use policy (appears verbatim across syllabi)
+        "title ix and statement on limits to confidentiality",  # Title IX boilerplate (34/100 files)
+        "texas a&m at college station",  # Location header inside boilerplate blocks
+        "attendance policy",  # Generic attendance policy (distinct from "university attendance policy")
     ],
     # IT helpdesk / tool support blocks (zero course-specific content)
     "TECH_SUPPORT": [
@@ -75,20 +81,17 @@ BOILERPLATE_REGISTRY: dict[str, list[str]] = {
     # Additional institutional template sections confirmed across files
     "INSTITUTIONAL": [
         "course copyright",
-        "plagiarism and copyright",                  # variant seen in 3+ files
+        "plagiarism and copyright",  # variant seen in 3+ files
         "respect for all",
         "absence documentation",
-        "accessibility statement",       # Disability accommodation boilerplate
-        "late days table",               # Template table repeated verbatim
+        "accessibility statement",  # Disability accommodation boilerplate
+        "late days table",  # Template table repeated verbatim
+        "course material and copyright",  # Variant of "course copyright" (ISEN 689)
     ],
 }
 
 # Flat lookup: lowercase header text → category label
-_HEADER_MAP: dict[str, str] = {
-    h: cat
-    for cat, headers in BOILERPLATE_REGISTRY.items()
-    for h in headers
-}
+_HEADER_MAP: dict[str, str] = {h: cat for cat, headers in BOILERPLATE_REGISTRY.items() for h in headers}
 
 ALL_BOILERPLATE_HEADERS: frozenset[str] = frozenset(_HEADER_MAP)
 
@@ -102,6 +105,7 @@ BODY_BOILERPLATE_HEADERS: list[str] = [
     "regrading policy",
     "course copyright statement",
     "course copyright",
+    "course material and copyright",
 ]
 
 
@@ -145,13 +149,15 @@ def strip_markdown_boilerplate(md_text: str) -> tuple[str, list[dict]]:
         content = "\n".join(content_lines).strip()
 
         if bp_type:
-            strip_log.append({
-                "header": header,
-                "type": bp_type,
-                "chars": len(header or "") + len(content),
-                "header_level": level,
-                "content": content,
-            })
+            strip_log.append(
+                {
+                    "header": header,
+                    "type": bp_type,
+                    "chars": len(header or "") + len(content),
+                    "header_level": level,
+                    "content": content,
+                }
+            )
         else:
             if header:
                 kept.append(f"{'#' * level} {header}")
@@ -200,12 +206,14 @@ def strip_body_level_boilerplate(text: str) -> tuple[str, list[dict]]:
                 block.append(lines[j])
                 j += 1
             content = "\n".join(block).strip()
-            strip_log.append({
-                "header": header_text,
-                "type": "BODY_BOILERPLATE",
-                "chars": len(header_text) + len(content),
-                "content": content,
-            })
+            strip_log.append(
+                {
+                    "header": header_text,
+                    "type": "BODY_BOILERPLATE",
+                    "chars": len(header_text) + len(content),
+                    "content": content,
+                }
+            )
             i = j  # skip header + body block
         else:
             out_lines.append(line)
@@ -215,6 +223,7 @@ def strip_body_level_boilerplate(text: str) -> tuple[str, list[dict]]:
 
 
 # ── Core strip function ───────────────────────────────────────────────────────
+
 
 def strip_pdf(pdf_path: Path) -> tuple[str, list[dict]]:
     """
@@ -245,12 +254,14 @@ def strip_pdf(pdf_path: Path) -> tuple[str, list[dict]]:
                 text = " ".join(s["text"] for s in spans).strip()
                 if not text:
                     continue
-                raw_lines.append({
-                    "text": text,
-                    "size": max(s.get("size", 0) for s in spans),
-                    "bold": any(s.get("flags", 0) & 16 for s in spans),
-                    "page": page_num,
-                })
+                raw_lines.append(
+                    {
+                        "text": text,
+                        "size": max(s.get("size", 0) for s in spans),
+                        "bold": any(s.get("flags", 0) & 16 for s in spans),
+                        "page": page_num,
+                    }
+                )
     doc.close()
 
     if not raw_lines:
@@ -266,10 +277,7 @@ def strip_pdf(pdf_path: Path) -> tuple[str, list[dict]]:
     cur_lines: list[str] = []
 
     for ln in raw_lines:
-        is_header = (
-            (ln["bold"] or ln["size"] >= body_size + 0.5)
-            and 3 <= len(ln["text"]) <= 120
-        )
+        is_header = (ln["bold"] or ln["size"] >= body_size + 0.5) and 3 <= len(ln["text"]) <= 120
         if is_header:
             sections.append((cur_header, cur_page, cur_lines))
             cur_header = ln["text"]
@@ -288,13 +296,15 @@ def strip_pdf(pdf_path: Path) -> tuple[str, list[dict]]:
         content = "\n".join(lines)
 
         if bp_type:
-            strip_log.append({
-                "header": header,
-                "type": bp_type,
-                "chars": len(header or "") + len(content),
-                "page_start": page,
-                "content": content,
-            })
+            strip_log.append(
+                {
+                    "header": header,
+                    "type": bp_type,
+                    "chars": len(header or "") + len(content),
+                    "page_start": page,
+                    "content": content,
+                }
+            )
         else:
             if header:
                 kept.append(header)
@@ -340,21 +350,26 @@ def pdf_to_annotated_markdown(pdf_path: Path) -> tuple[str, dict]:
                 text = " ".join(s["text"] for s in spans).strip()
                 if not text:
                     continue
-                raw_lines.append({
-                    "text": text,
-                    "size": max(s.get("size", 0) for s in spans),
-                    "bold": any(s.get("flags", 0) & 16 for s in spans),
-                    "page": page_num,
-                })
+                raw_lines.append(
+                    {
+                        "text": text,
+                        "size": max(s.get("size", 0) for s in spans),
+                        "bold": any(s.get("flags", 0) & 16 for s in spans),
+                        "page": page_num,
+                    }
+                )
     doc.close()
 
     char_count_in = sum(len(ln["text"]) for ln in raw_lines)
 
     if not raw_lines:
         return "", {
-            "page_count": page_count, "body_size": 0,
-            "annotated_lines": 0, "plain_lines": 0,
-            "char_count_in": 0, "char_count_out": 0,
+            "page_count": page_count,
+            "body_size": 0,
+            "annotated_lines": 0,
+            "plain_lines": 0,
+            "char_count_in": 0,
+            "char_count_out": 0,
         }
 
     # 0.5pt resolution prevents collapsing nearby sizes (e.g. 10.5 → 10).
@@ -466,14 +481,16 @@ def strip_font_annotated_boilerplate(text: str) -> tuple[str, list[dict]]:
         bold = meta.get("bold", False)
 
         if bp_type:
-            strip_log.append({
-                "header": header,
-                "type": bp_type,
-                "chars": len(header or "") + len(content),
-                "font_size": font_size,
-                "bold": bold,
-                "content": content,
-            })
+            strip_log.append(
+                {
+                    "header": header,
+                    "type": bp_type,
+                    "chars": len(header or "") + len(content),
+                    "font_size": font_size,
+                    "bold": bold,
+                    "content": content,
+                }
+            )
         else:
             if header:
                 bold_tag = " bold" if bold else ""
@@ -612,6 +629,7 @@ def render_stripped_markdown(stem: str, strip_log: list[dict]) -> str:
 
 # ── Batch validation ──────────────────────────────────────────────────────────
 
+
 def batch_validate(pdf_paths: list[Path], log_dir: Path) -> dict:
     """
     Run strip_pdf on every PDF, write per-file JSON logs, return a summary.
@@ -666,9 +684,7 @@ def batch_validate(pdf_paths: list[Path], log_dir: Path) -> dict:
         "run_timestamp": datetime.now().isoformat(),
         "total_files": len(results),
         "files_ok": len(ok),
-        "avg_reduction_pct": round(
-            sum(r["reduction_pct"] for r in ok) / max(len(ok), 1), 1
-        ),
+        "avg_reduction_pct": round(sum(r["reduction_pct"] for r in ok) / max(len(ok), 1), 1),
         "stripped_by_type": dict(type_counter.most_common()),
         "stripped_header_frequency": dict(header_counter.most_common()),
     }
@@ -686,11 +702,10 @@ if __name__ == "__main__":
 
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-    parser = argparse.ArgumentParser(
-        description="Batch boilerplate strip — dry-run validation across all PDFs"
-    )
+    parser = argparse.ArgumentParser(description="Batch boilerplate strip — dry-run validation across all PDFs")
     parser.add_argument(
-        "--input-dirs", nargs="+",
+        "--input-dirs",
+        nargs="+",
         default=[
             "tamu_data/raw/simple_syllabus_20260305",
             "tamu_data/raw/simple_syllabus_20260304",
@@ -712,7 +727,7 @@ if __name__ == "__main__":
     summary = batch_validate(pdfs, Path(args.log_dir))
 
     total = summary["total_files"]
-    print(f"\n{'='*65}")
+    print(f"\n{'=' * 65}")
     print(f"Files processed : {total}  ({summary['files_ok']} ok)")
     print(f"Avg reduction   : {summary['avg_reduction_pct']}%")
 
@@ -722,9 +737,9 @@ if __name__ == "__main__":
 
     print("\nStripped header frequency (top 40):")
     print(f"  {'Header':<55} {'Files':>6}  {'%':>6}")
-    print(f"  {'-'*55}  {'------':>6}  {'------':>6}")
+    print(f"  {'-' * 55}  {'------':>6}  {'------':>6}")
     for header, count in list(summary["stripped_header_frequency"].items())[:40]:
-        print(f"  {header:<55} {count:>6}  {count/total*100:>5.1f}%")
+        print(f"  {header:<55} {count:>6}  {count / total * 100:>5.1f}%")
 
     print(f"\nPer-file logs : {args.log_dir}/")
     print(f"Summary       : {args.log_dir}/_summary.json")

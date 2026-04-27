@@ -13,7 +13,12 @@ COPY requirements.txt pyproject.toml ./
 COPY src/ src/
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -e ".[v4]"
+    pip install --no-cache-dir -e ".[v4]" && \
+    pip install --no-cache-dir playwright
+
+# Playwright: install Chromium browser + its OS deps
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+RUN playwright install --with-deps chromium
 
 # Non-root user (required for claude --dangerously-skip-permissions)
 RUN useradd -m -s /bin/bash claude && chown -R claude:claude /workspace
