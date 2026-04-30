@@ -19,6 +19,7 @@ from tamubot.rag.prompts import ROUTER_PROMPT
 from tamubot.rag.tools.llm import call_llm
 from tamubot.rag.utils import compute_dynamic_k, normalize_course_id  # noqa: F401 (re-exported)
 
+
 # ---------------------------------------------------------------------------
 # Derivation helpers (pure Python, no LLM)
 # ---------------------------------------------------------------------------
@@ -111,6 +112,39 @@ FUNCTION_CATEGORY_STRATEGIES: dict = {}
 # Classification
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Router JSON Schema (for Lite model stability)
+# ---------------------------------------------------------------------------
+
+ROUTER_SCHEMA = {
+    "name": "router_output",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "course_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of course IDs mentioned (e.g. ['CSCE 612'])"
+            },
+            "intent_type": {
+                "type": ["string", "null"],
+                "enum": ["ACADEMIC", "CAREER", "DIFFICULTY", "PLANNING", "ADMINISTRATIVE", "LOGISTICAL", "GENERAL", None],
+                "description": "User intent type"
+            },
+            "recursive_search": {
+                "type": "boolean",
+                "description": "True if searching for unknown courses using an anchor"
+            },
+            "rewritten_query": {
+                "type": "string",
+                "description": "The query rewritten for vector retrieval"
+            }
+        },
+        "required": ["course_ids", "intent_type", "recursive_search", "rewritten_query"]
+    }
+}
+
+
 @observe(as_type="generation", name="pipeline.router")
 def classify_query(
     query: str,
@@ -148,6 +182,7 @@ def classify_query(
             temperature=0,
             max_tokens=4096,
             json_mode=True,
+            json_schema=ROUTER_SCHEMA,
             thinking_budget=512,
         )
         raw_text = llm_result.text
@@ -173,15 +208,17 @@ def classify_query(
         raw_ids = [raw_ids]
     course_ids = [_normalize_course_id(c) for c in raw_ids if c]
 
-    valid_intent_types = {"ACADEMIC", "CAREER", "DIFFICULTY", "PLANNING", "ADMINISTRATIVE", "GENERAL"}
+    valid_intent_types = {"ACADEMIC", "CAREER", "DIFFICULTY", "PLANNING", "ADMINISTRATIVE", "LOGISTICAL", "GENERAL"}
     intent_type = data.get("intent_type")
     if intent_type not in valid_intent_types:
         intent_type = None
 
+    recursive_search = bool(data.get("recursive_search", False))
+
     result = RouterResult(
         course_ids=course_ids,
         intent_type=intent_type,
-        recursive_search=bool(data.get("recursive_search", False)),
+        recursive_search=recursive_search,
         rewritten_query=data.get("rewritten_query", query),
         section=data.get("section"),
         # function and retrieval_mode auto-derived in __post_init__
